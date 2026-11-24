@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Nightstand - Photos page mockup</title>
+<!-- Render with ?night to get the night treatment. Placeholder landscape is pure SVG (no real photos). -->
+<style>
+  html,body{margin:0;width:915px;height:412px;background:#000;overflow:hidden;
+    font-family:-apple-system,"SF Pro Display","Inter","Roboto","Helvetica Neue",Arial,sans-serif}
+  .stage{position:relative;width:915px;height:412px;overflow:hidden;background:#000}
+  .photo{position:absolute;inset:-4%;width:108%;height:108%;
+    transform:scale(1.06) translate(-1.2%,0.6%);transform-origin:60% 40%} /* Ken Burns frame */
+  .scrim{position:absolute;inset:0;
+    background:linear-gradient(to top right,rgba(0,0,0,.55) 0%,rgba(0,0,0,.25) 28%,rgba(0,0,0,0) 52%)}
+  .overlay{position:absolute;left:34px;bottom:26px;color:#fff;text-shadow:0 1px 12px rgba(0,0,0,.35)}
+  .date{font-size:19px;font-weight:600;letter-spacing:.2px;opacity:.92;margin-bottom:-6px}
+  .time{font-size:86px;font-weight:700;letter-spacing:-2.5px;line-height:1;font-variant-numeric:tabular-nums}
+  .dots{position:absolute;right:16px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:6px}
+  .dots i{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.35)}
+  .dots i.on{background:rgba(255,255,255,.9)}
+  /* ---------- night ---------- */
+  body.night .photo{filter:url(#redmono);opacity:.42}
+  body.night .scrim{background:linear-gradient(to top right,rgba(0,0,0,.85) 0%,rgba(0,0,0,.5) 35%,rgba(0,0,0,.15) 60%)}
+  body.night .overlay{color:#B3241B;text-shadow:none;left:38px;bottom:23px} /* shifted a few px: burn-in drift */
+  body.night .date{opacity:1}
+  body.night .dots{display:none}
+</style></head>
+<body>
+<div class="stage">
+<svg class="photo" viewBox="0 0 1600 720" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2b3f7a"/><stop offset=".45" stop-color="#c86b6b"/>
+      <stop offset=".7" stop-color="#f4a95e"/><stop offset="1" stop-color="#ffd59a"/></linearGradient>
+    <radialGradient id="sun" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff6d8"/>
+      <stop offset=".35" stop-color="#ffe0a0"/><stop offset="1" stop-color="#ffb870" stop-opacity="0"/></radialGradient>
+    <linearGradient id="lake" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e79a6a"/>
+      <stop offset="1" stop-color="#1e2a4a"/></linearGradient>
+    <filter id="haze"><feGaussianBlur stdDeviation="3"/></filter>
+  </defs>
+  <rect width="1600" height="720" fill="url(#sky)"/>
+  <circle cx="1050" cy="430" r="230" fill="url(#sun)"/>
+  <circle cx="1050" cy="430" r="46" fill="#fff4d6"/>
+  <g filter="url(#haze)" opacity=".55" fill="#fff">
+    <ellipse cx="300" cy="170" rx="210" ry="22"/><ellipse cx="520" cy="210" rx="160" ry="14"/>
+    <ellipse cx="1300" cy="150" rx="240" ry="18"/></g>
+  <path d="M0 470 L180 330 L300 400 L470 250 L640 410 L780 330 L900 430 L1600 430 L1600 720 L0 720Z" fill="#7a4a6a" opacity=".75"/>
+  <path d="M0 500 L140 420 L260 470 L420 380 L560 470 L720 420 L860 480 L1000 440 L1180 470 L1350 400 L1600 470 L1600 720 L0 720Z" fill="#4a2e50"/>
+  <rect y="505" width="1600" height="215" fill="url(#lake)"/>
+  <rect x="1020" y="505" width="60" height="140" fill="#ffe6b0" opacity=".45" filter="url(#haze)"/>
+  <path d="M0 560 C200 540 380 600 560 610 C760 620 900 590 1080 640 L1080 720 L0 720Z" fill="#141a2c"/>
+  <g fill="#0d1120">
+    <path d="M90 600 l22 -120 l22 120z"/><path d="M140 610 l30 -170 l30 170z"/><path d="M205 605 l18 -95 l18 95z"/>
+    <path d="M1380 650 l26 -150 l26 150z"/><path d="M1440 660 l34 -210 l34 210z"/><path d="M1510 655 l22 -120 l22 120z"/></g>
+</svg>
+<svg width="0" height="0" style="position:absolute"><filter id="redmono" color-interpolation-filters="sRGB">
+  <!-- luminance -> single red channel (same math as an Android ColorMatrix) -->
+  <feColorMatrix type="matrix" values="
+    0.30 0.59 0.11 0 0
+    0.06 0.11 0.02 0 0
+    0.03 0.05 0.01 0 0
+    0    0    0    1 0"/>
+  <feComponentTransfer><feFuncR type="gamma" exponent="1.4" amplitude="1"/></feComponentTransfer>
+</filter></svg>
+<div class="scrim"></div>
+<div class="overlay"><div class="date">Tuesday, November 24</div><div class="time">10:41</div></div>
+<div class="dots"><i></i><i></i><i class="on"></i><i></i></div>
+</div>
+<script>if(location.search.includes('night')){document.body.classList.add('night');
+  document.querySelector('.time').textContent='2:17';document.querySelector('.date').textContent='Wed, November 25';}</script>
+</body></html>

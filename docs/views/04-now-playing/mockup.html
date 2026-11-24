@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<!-- Nightstand view 04 - Now Playing. Visual prototype only (not app code).
+     Open with ?night to see the night treatment. 915x412 CSS px = S26 Ultra landscape. -->
+<html><head><meta charset="utf-8"><title>Nightstand - Now Playing mockup</title>
+<style>
+  :root { --fg:#F5F5F7; --fg2:#9A9AA0; --track:#3A3A3C; --accent:#F5F5F7; }
+  body.night { --fg:#FF3B1F; --fg2:rgba(255,59,31,.62); --track:rgba(255,59,31,.22); --accent:#FF3B1F; }
+  html,body { margin:0; width:915px; height:412px; background:#000; overflow:hidden; }
+  body { font-family: -apple-system, "SF Pro Display", "Inter", "Helvetica Neue", Roboto, Arial, sans-serif;
+         color:var(--fg); position:relative; }
+  /* Day only: faint colour wash taken from the art (Palette.getDominantSwatch in Android) */
+  .wash { position:absolute; inset:0; background: radial-gradient(ellipse 520px 380px at 190px 206px,
+          rgba(124,58,237,.30), rgba(236,72,153,.10) 55%, transparent 75%); }
+  body.night .wash { display:none; }
+  .clock { position:absolute; top:22px; right:34px; font-size:22px; font-weight:600;
+           letter-spacing:.5px; color:var(--fg2); font-variant-numeric: tabular-nums; }
+  .art { position:absolute; left:44px; top:50px; width:312px; height:312px; border-radius:26px;
+         overflow:hidden; box-shadow: 0 18px 48px rgba(0,0,0,.65), 0 0 0 1px rgba(255,255,255,.06); }
+  .art svg { width:100%; height:100%; display:block; }
+  /* Night: art becomes red monochrome (luminance -> black..red) and dimmed */
+  body.night .art { filter:url(#redmono); box-shadow:none; opacity:.55; }
+  .info { position:absolute; left:400px; right:44px; top:66px; }
+  .src { font-size:15px; font-weight:600; color:var(--fg2); display:flex; align-items:center; gap:8px;
+         text-transform:uppercase; letter-spacing:1.4px; }
+  .src i { width:9px; height:9px; border-radius:50%; background:#1ED760; display:inline-block; }
+  body.night .src i { background:var(--fg); opacity:.7; }
+  h1 { margin:12px 0 0; font-size:44px; line-height:1.05; font-weight:800; letter-spacing:-.8px;
+       white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  h2 { margin:8px 0 0; font-size:27px; font-weight:600; color:var(--fg2); letter-spacing:-.2px; }
+  .prog { margin-top:30px; }
+  .bar { height:7px; border-radius:4px; background:var(--track); position:relative; }
+  .bar b { position:absolute; left:0; top:0; bottom:0; width:41%; border-radius:4px; background:var(--fg); }
+  body.night .bar { height:4px; }
+  .times { display:flex; justify-content:space-between; margin-top:9px; font-size:15px; font-weight:600;
+           color:var(--fg2); font-variant-numeric: tabular-nums; }
+  .ctrls { margin-top:16px; display:flex; justify-content:center; align-items:center; gap:58px; }
+  .ctrls svg { display:block; fill:var(--accent); }
+  .play { width:84px; height:84px; border-radius:50%; background:var(--fg); display:flex;
+          align-items:center; justify-content:center; }
+  .play svg { fill:#000; }
+  body.night .play { background:transparent; box-shadow: inset 0 0 0 3px var(--fg); }
+  body.night .play svg { fill:var(--fg); }
+</style></head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <filter id="redmono" color-interpolation-filters="sRGB">
+    <!-- R = luminance, G = 0.23*lum, B = 0.12*lum  => black..#FF3B1F ramp -->
+    <feColorMatrix type="matrix" values="
+      0.2126 0.7152 0.0722 0 0
+      0.0489 0.1645 0.0166 0 0
+      0.0258 0.0868 0.0088 0 0
+      0      0      0      1 0"/>
+  </filter>
+</svg>
+<div class="wash"></div>
+<div class="clock">11:42</div>
+
+<div class="art"><!-- generated placeholder cover, no real artwork -->
+  <svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#1E1B4B"/><stop offset=".55" stop-color="#7C3AED"/>
+        <stop offset=".8" stop-color="#EC4899"/><stop offset="1" stop-color="#F59E0B"/>
+      </linearGradient>
+      <radialGradient id="sun" cx=".5" cy=".5" r=".5">
+        <stop offset="0" stop-color="#FDE68A"/><stop offset="1" stop-color="#F97316"/>
+      </radialGradient>
+    </defs>
+    <rect width="300" height="300" fill="url(#sky)"/>
+    <circle cx="150" cy="190" r="70" fill="url(#sun)"/>
+    <g fill="#0B0A1F">
+      <rect x="0" y="200" width="300" height="100"/>
+      <rect x="18" y="150" width="34" height="60"/><rect x="58" y="118" width="26" height="92"/>
+      <rect x="90" y="168" width="40" height="42"/><rect x="176" y="132" width="30" height="78"/>
+      <rect x="212" y="98" width="22" height="112"/><rect x="240" y="160" width="44" height="50"/>
+    </g>
+    <g fill="#FDE68A" opacity=".8">
+      <rect x="64" y="128" width="4" height="5"/><rect x="74" y="140" width="4" height="5"/>
+      <rect x="218" y="110" width="4" height="5"/><rect x="226" y="126" width="4" height="5"/>
+      <rect x="184" y="146" width="4" height="5"/><rect x="250" y="172" width="4" height="5"/>
+    </g>
+    <g stroke="#EC4899" stroke-width="1.5" opacity=".55">
+      <line x1="0" y1="228" x2="300" y2="228"/><line x1="0" y1="246" x2="300" y2="246"/>
+      <line x1="0" y1="268" x2="300" y2="268"/><line x1="150" y1="210" x2="40" y2="300"/>
+      <line x1="150" y1="210" x2="260" y2="300"/><line x1="150" y1="210" x2="150" y2="300"/>
+    </g>
+  </svg>
+</div>
+
+<div class="info">
+  <div class="src"><i></i>Spotify</div>
+  <h1>Midnight City</h1>
+  <h2>Sample Artist</h2>
+  <div class="prog">
+    <div class="bar"><b></b></div>
+    <div class="times"><span>1:43</span><span>-2:28</span></div>
+  </div>
+  <div class="ctrls">
+    <svg width="54" height="40" viewBox="0 0 54 40"><rect x="0" y="4" width="5" height="32" rx="2"/>
+      <path d="M29 4 L7 20 L29 36 Z"/><path d="M52 4 L30 20 L52 36 Z"/></svg>
+    <div class="play"><svg width="34" height="38" viewBox="0 0 34 38">
+      <rect x="2" y="1" width="11" height="36" rx="3"/><rect x="21" y="1" width="11" height="36" rx="3"/></svg></div>
+    <svg width="54" height="40" viewBox="0 0 54 40"><path d="M2 4 L24 20 L2 36 Z"/>
+      <path d="M25 4 L47 20 L25 36 Z"/><rect x="49" y="4" width="5" height="32" rx="2"/></svg>
+  </div>
+</div>
+<script>if (location.search.includes('night')) document.body.classList.add('night');</script>
+</body></html>

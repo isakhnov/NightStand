@@ -18,35 +18,51 @@ import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
 import android.provider.CalendarContract
-import android.view.GestureDetector
-import android.view.MotionEvent
 import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.view.WindowManager
+import com.nightstand.pages.DisplayData
+import com.nightstand.pages.PageContainer
+import com.nightstand.pages.PageRegistry
 import java.util.Calendar
+import kotlin.math.roundToInt
 
 /**
  * The StandBy screen. Shown over the lock screen (showWhenLocked) without
  * unlocking, turns the screen on when launched, keeps it on while it's up.
+ * Content is a [PageContainer] of swipeable pages (PageRegistry).
  *
- * Gestures: tap = brighten briefly (night) · double-tap = unlock and close.
+ * Gestures: swipe ←/→ = next/previous view · swipe ↑/↓ = night brightness ·
+ * tap = brighten briefly (night) · double-tap = unlock and close.
  * Closes itself when the charger is pulled or the phone is picked up
  * (WatcherService → StandByState.requestHide).
  */
 class NightstandActivity : Activity(), SensorEventListener {
 
-    private lateinit var view: NightstandView
+    private lateinit var container: PageContainer
+    private val data = DisplayData()
     private lateinit var sensors: SensorManager
     private val main = Handler(Looper.getMainLooper())
     private val nightCtl = NightModeController()
     private var lightSensor: Sensor? = null
+    private var boosted = false
 
     private val tick = object : BroadcastReceiver() {
         override fun onReceive(c: Context, i: Intent) {
             when (i.action) {
                 Intent.ACTION_BATTERY_CHANGED -> updateBattery(i)
-                else -> refreshAll() // TIME_TICK / TIME_SET / TIMEZONE_CHANGED
+                else -> onMinute() // TIME_TICK / TIME_SET / TIMEZONE_CHANGED
             }
+        }
+    }
+
+    /** Per-second redraw, only while the visible page has a second hand. */
+    private val secondTick = object : Runnable {
+        override fun run() {
+            val page = container.current ?: return
+            if (!page.needsSeconds) return
+            page.onTick()
+            main.postDelayed(this, 1000 - System.currentTimeMillis() % 1000)
         }
     }
 
@@ -56,7 +72,7 @@ class NightstandActivity : Activity(), SensorEventListener {
 
     private val onFeedChanged: () -> Unit = { refreshNotifs() }
     private val hide: () -> Unit = { if (!isFinishing) finish() }
-    private val endBoost = Runnable { view.nightBoost = false; applyBrightness() }
+    private val endBoost = Runnable { boosted = false; applyBrightness() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,9 +80,19 @@ class NightstandActivity : Activity(), SensorEventListener {
         setTurnScreenOn(true)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-        view = NightstandView(this)
-        setContentView(view)
+        container = PageContainer(this)
+        setContentView(container)
         hideSystemBars()
+        buildPages()
+
+        container.onTap = { boost() }
+        container.onDoubleTap = { unlockAndClose() }
+        container.onBrightnessDrag = { delta -> adjustNightBrightness(delta) }
+        container.onPageChanged = { page ->
+            Prefs.setLastPage(this, page.pageId)
+            PageRegistry.all.firstOrNull { it.id == page.pageId }?.let { container.flash(it.title) }
+            restartSecondTick()
+        }
 
         sensors = getSystemService(SensorManager::class.java)
         lightSensor = sensors.getDefaultSensor(Sensor.TYPE_LIGHT)
@@ -74,17 +100,16 @@ class NightstandActivity : Activity(), SensorEventListener {
             nightCtl.set(NightModeController.nightBySchedule(Calendar.getInstance().get(Calendar.HOUR_OF_DAY)))
         }
 
-        val gestures = GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
-            override fun onDown(e: MotionEvent) = true
-            override fun onSingleTapConfirmed(e: MotionEvent): Boolean { boost(); return true }
-            override fun onDoubleTap(e: MotionEvent): Boolean { unlockAndClose(); return true }
-        })
-        view.setOnTouchListener { _, ev -> gestures.onTouchEvent(ev) }
-
         StandByState.hideRequest = hide
         StandByState.setVisible(true)
         WatcherService.cancelLaunchNotification(this)
         WatcherService.log("Nightstand shown")
+    }
+
+    private fun buildPages() {
+        val off = Prefs.disabledPages(this)
+        val entries = PageRegistry.all.filter { it.id !in off }.ifEmpty { PageRegistry.all.take(1) }
+        container.setPages(entries.map { it.create(this, data) }, Prefs.lastPage(this))
     }
 
     override fun onStart() {
@@ -100,9 +125,11 @@ class NightstandActivity : Activity(), SensorEventListener {
         }
         StandByState.changeListeners += onFeedChanged
         lightSensor?.let { sensors.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL) }
-        view.showNotifContent = Prefs.showContent(this)
-        refreshAll()
+        data.showNotifContent = Prefs.showContent(this)
+        refreshEvents(); refreshNotifs()
         applyBrightness()
+        container.current?.onShown()
+        restartSecondTick()
     }
 
     override fun onStop() {
@@ -110,6 +137,8 @@ class NightstandActivity : Activity(), SensorEventListener {
         contentResolver.unregisterContentObserver(calendarObserver)
         StandByState.changeListeners -= onFeedChanged
         sensors.unregisterListener(this)
+        main.removeCallbacks(secondTick)
+        container.current?.onHidden()
         super.onStop()
         // Stopped because the screen went off → stay, so Nightstand is still
         // there when the screen comes back (iPhone behaviour). Stopped because
@@ -135,24 +164,28 @@ class NightstandActivity : Activity(), SensorEventListener {
 
     // --- content ------------------------------------------------------------
 
-    private fun refreshAll() {
+    private fun onMinute() {
         refreshEvents()
-        refreshNotifs()
         if (lightSensor == null &&
             nightCtl.set(NightModeController.nightBySchedule(Calendar.getInstance().get(Calendar.HOUR_OF_DAY)))
         ) applyBrightness()
-        view.invalidate() // minute changed → clock + burn-in shift
+        container.current?.onTick()
     }
 
-    private fun refreshEvents() { view.events = CalendarSource.upcoming(this) }
-    private fun refreshNotifs() { view.notifs = NotificationFeed.snapshot }
+    private fun restartSecondTick() {
+        main.removeCallbacks(secondTick)
+        main.post(secondTick)
+    }
+
+    private fun refreshEvents() { data.events = CalendarSource.upcoming(this); container.refreshAll() }
+    private fun refreshNotifs() { data.notifs = NotificationFeed.snapshot; container.refreshAll() }
 
     private fun updateBattery(i: Intent) {
         val level = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
         val scale = i.getIntExtra(BatteryManager.EXTRA_SCALE, 100)
-        view.batteryPct = if (level >= 0) level * 100 / scale else -1
-        view.charging = i.getIntExtra(BatteryManager.EXTRA_STATUS, 0) == BatteryManager.BATTERY_STATUS_CHARGING
-        view.invalidate()
+        data.batteryPct = if (level >= 0) level * 100 / scale else -1
+        data.charging = i.getIntExtra(BatteryManager.EXTRA_STATUS, 0) == BatteryManager.BATTERY_STATUS_CHARGING
+        container.refreshAll()
     }
 
     // --- night mode ---------------------------------------------------------
@@ -175,19 +208,29 @@ class NightstandActivity : Activity(), SensorEventListener {
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
 
     private fun applyBrightness() {
-        view.night = nightCtl.night
+        container.palette = if (nightCtl.night) Palette.NIGHT else Palette.DAY
+        val night = Prefs.nightBrightness(this)
         window.attributes = window.attributes.apply {
             screenBrightness = when {
                 !nightCtl.night -> WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
-                view.nightBoost -> 0.15f
-                else -> 0.01f
+                boosted -> minOf(1f, night + 0.3f)
+                else -> night
             }
         }
     }
 
+    /** Swipe up/down: tune night brightness live and remember it. */
+    private fun adjustNightBrightness(delta: Float): String? {
+        if (!nightCtl.night) return "Brightness follows the system in day mode"
+        val v = (Prefs.nightBrightness(this) + delta * 0.6f).coerceIn(Prefs.MIN_NIGHT, 1f)
+        Prefs.setNightBrightness(this, v)
+        applyBrightness()
+        return "Night brightness ${(v * 100).roundToInt()}%"
+    }
+
     private fun boost() {
         if (!nightCtl.night) return
-        view.nightBoost = true
+        boosted = true
         applyBrightness()
         main.removeCallbacks(endBoost)
         main.postDelayed(endBoost, 6000)

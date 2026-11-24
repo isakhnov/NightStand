@@ -5,8 +5,14 @@ An iPhone-StandBy-style bedside display for Android, built for and to be tested 
 
 Put the phone on the charger **sideways, still and locked** → full-screen clock,
 upcoming calendar events and a notification strip. In a dark room it turns **dim red**.
-Tap to brighten for a moment, double-tap to unlock. Pick it up or pull the
-charger and it goes away.
+Swipe left/right to cycle views, up/down to set night brightness. Tap to
+brighten for a moment, double-tap to unlock. Pick it up or pull the charger and
+it goes away.
+
+**Views** (`pages/`, registered in `PageRegistry`): *Clock + up next* and *Big
+clock*, each with an analog (iOS-style) or digital clock. Candidate views in
+research — work calendar, clock + weather, photos, now playing — each have a
+feasibility study and mockups in [`docs/views/`](docs/views/).
 
 > Status: **prototype**. It builds and its logic is unit-tested, but it hasn't run on a
 > real S26 Ultra yet. See [On-device test plan](#on-device-test-plan).

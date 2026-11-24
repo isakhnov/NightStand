@@ -19,8 +19,10 @@ import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.ScrollView
+import android.widget.SeekBar
 import android.widget.Switch
 import android.widget.TextView
+import com.nightstand.pages.PageRegistry
 
 /**
  * Launcher screen: one row per permission with its live status and a button to
@@ -76,6 +78,7 @@ class SetupActivity : Activity() {
         })
         list.addView(TextView(this).apply {
             text = "Charging + sideways + still + locked → clock, calendar and notifications. " +
+                "Swipe left/right for views, up/down for night brightness. " +
                 "Tap to brighten at night, double-tap to unlock."
             setTextColor(0xFF9A9AA0.toInt()); setPadding(0, 8, 0, 24)
         })
@@ -120,6 +123,32 @@ class SetupActivity : Activity() {
         }
         toggle("Show notification titles while locked", Prefs.showContent(this)) { Prefs.setShowContent(this, it) }
 
+        header("Display")
+        toggle("Analog clock (off = digital)", Prefs.clockStyle(this) == Prefs.ClockStyle.ANALOG) {
+            Prefs.setClockStyle(this, if (it) Prefs.ClockStyle.ANALOG else Prefs.ClockStyle.DIGITAL)
+        }
+        list.addView(TextView(this).apply {
+            text = "Night brightness (also: swipe up/down on the display)"
+            setTextColor(Color.WHITE); setPadding(0, 16, 0, 0)
+        })
+        list.addView(SeekBar(this).apply {
+            max = 100
+            progress = (Prefs.nightBrightness(context) * 100).toInt()
+            setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(sb: SeekBar, v: Int, fromUser: Boolean) {
+                    if (fromUser) Prefs.setNightBrightness(context, v / 100f)
+                }
+                override fun onStartTrackingTouch(sb: SeekBar) {}
+                override fun onStopTrackingTouch(sb: SeekBar) {}
+            })
+        })
+
+        header("Views (swipe left/right to cycle)")
+        val off = Prefs.disabledPages(this)
+        for (e in PageRegistry.all) {
+            toggle(e.title, e.id !in off) { Prefs.setPageEnabled(this, e.id, it) }
+        }
+
         list.addView(Button(this).apply {
             text = "Preview now"
             setOnClickListener { startActivity(Intent(context, NightstandActivity::class.java)) }
@@ -127,6 +156,12 @@ class SetupActivity : Activity() {
         list.addView(TextView(this).apply {
             text = "Live posture: ${StandByState.lastPosture} — debug log (newest first):"
             setTextColor(Color.WHITE); setPadding(0, 24, 0, 0)
+        })
+    }
+
+    private fun header(title: String) {
+        list.addView(TextView(this).apply {
+            text = title; textSize = 18f; setTextColor(0xFFFF9F0A.toInt()); setPadding(0, 32, 0, 8)
         })
     }
 

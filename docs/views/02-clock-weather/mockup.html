@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Nightstand view 02: clock + weather (mockup)</title>
+<!-- Google Sans Flex (SIL OFL 1.1), variable: wght 100..1000, ROND 0..100 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght,ROND@6..144,100..1000,0..100&display=block">
+<style>
+  :root { --night: #FF3B1F; --day-fg: #FFFFFF; --day-dim: #8E8E93; --day-accent: #FF9500; --day-drop: #5AC8FA; }
+  html, body { margin: 0; background: #111; color: #ccc; font: 14px/1.4 system-ui, sans-serif; }
+  .caption { width: 915px; margin: 24px auto 6px; }
+  /* One frame = one landscape S26 Ultra screen in CSS px (915 x 412). */
+  .frame {
+    width: 915px; height: 412px; margin: 0 auto; background: #000; position: relative; overflow: hidden;
+    display: grid; grid-template-columns: 457px 458px; align-items: center;
+    font-family: 'Google Sans Flex', 'Nunito', system-ui, sans-serif;
+    font-variation-settings: 'ROND' 100;
+    --fg: var(--day-fg); --dim: var(--day-dim); --accent: var(--day-accent); --drop: var(--day-drop);
+    color: var(--fg);
+  }
+  .frame.night { --fg: var(--night); --dim: var(--night); --accent: var(--night); --drop: var(--night); }
+  .left { display: flex; justify-content: center; align-items: center; height: 100%; }
+  .clock { width: 372px; height: 372px; }
+  .weather { padding-left: 34px; display: flex; flex-direction: column; align-items: flex-start; }
+  .loc { font-size: 34px; font-weight: 800; letter-spacing: -0.3px; display: flex; align-items: center; gap: 8px; }
+  .loc svg { width: 24px; height: 24px; margin-top: 2px; }
+  .temp { font-size: 168px; font-weight: 800; letter-spacing: -6px; line-height: 0.92; margin: 6px 0 10px -6px; }
+  .cond { font-size: 34px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+  .cond svg { width: 40px; height: 40px; }
+  .hilo { font-size: 34px; font-weight: 800; margin-top: 4px; }
+  .night .hilo, .night .cond-text { opacity: 1; }
+  .digital { font-size: 138px; font-weight: 850; letter-spacing: -5px; white-space: nowrap; font-variant-numeric: tabular-nums; line-height: 1; }
+  .digital .colon { display: inline-block; transform: translateY(-10px); margin: 0 2px; }
+  .digital-date { font-size: 30px; font-weight: 800; text-align: center; margin-bottom: -6px; }
+</style>
+</head>
+<body>
+
+<div class="caption">Day</div>
+<div class="frame day" id="day">
+  <div class="left"><svg class="clock" viewBox="-200 -200 400 400"></svg></div>
+  <div class="weather"></div>
+</div>
+
+<div class="caption">Night (single bright red #FF3B1F on black)</div>
+<div class="frame night" id="night">
+  <div class="left"><svg class="clock" viewBox="-200 -200 400 400"></svg></div>
+  <div class="weather"></div>
+</div>
+
+<div class="caption">Variant: digital clock + weather, night</div>
+<div class="frame night" id="digital-night">
+  <div class="left"><div><div class="digital-date">Tue 24</div><div class="digital">10<span class="colon">:</span>09</div></div></div>
+  <div class="weather"></div>
+</div>
+
+<script>
+const T = { h: 10, m: 9, s: 34 };          // time shown in the mockup
+const W = { place: 'Cancún', temp: 77, cond: 'Rain', hi: 80, lo: 77 };
+const NS = 'http://www.w3.org/2000/svg';
+
+// iOS "location.fill"-style arrow, pointing up-right.
+const ARROW = `<svg viewBox="0 0 24 24"><path fill="currentColor"
+  d="M21.2 2.8c.5.5.6 1.2.3 1.8l-8.2 16.6c-.6 1.2-2.4 1-2.7-.3l-1.5-6.3-6.3-1.5c-1.3-.3-1.5-2.1-.3-2.7L19.4 2.5c.6-.3 1.3-.2 1.8.3z"/></svg>`;
+// Rain: cloud (fg) + drops (drop colour). Shapes in the spirit of Material Symbols "rainy".
+const RAIN = `<svg viewBox="0 0 48 48">
+  <path fill="var(--fg)" d="M14 30c-5 0-9-3.8-9-8.6 0-4.3 3.2-7.9 7.4-8.5C14.2 8.2 18.6 5 23.8 5c6.2 0 11.3 4.6 12 10.6 4.1.4 7.2 3.8 7.2 7.9 0 4.4-3.6 6.5-8 6.5H14z"/>
+  <g stroke="var(--drop)" stroke-width="3.6" stroke-linecap="round">
+    <line x1="15" y1="35" x2="12" y2="43"/><line x1="24" y1="35" x2="21" y2="43"/><line x1="33" y1="35" x2="30" y2="43"/></g></svg>`;
+
+function weatherHTML() {
+  return `<div class="loc">${W.place}${ARROW}</div>
+    <div class="temp">${W.temp}°</div>
+    <div class="cond">${RAIN}<span class="cond-text">${W.cond}</span></div>
+    <div class="hilo">H:${W.hi}° L:${W.lo}°</div>`;
+}
+
+function el(name, attrs, parent) {
+  const e = document.createElementNS(NS, name);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  parent.appendChild(e); return e;
+}
+
+// Analog face modelled on iOS StandBy "Analog": minute ticks on the rim, bold rounded
+// numerals 1-12, white hour/minute hands with a thin neck, orange second hand with tail
+// and a ringed centre cap.
+function drawClock(svg) {
+  const R = 192;
+  for (let i = 0; i < 60; i++) {
+    const a = i * 6 * Math.PI / 180, hour = i % 5 === 0;
+    const r1 = R - (hour ? 15 : 11), r2 = R - 2;
+    el('line', { x1: r1 * Math.sin(a), y1: -r1 * Math.cos(a), x2: r2 * Math.sin(a), y2: -r2 * Math.cos(a),
+      stroke: hour ? 'var(--fg)' : 'var(--dim)', 'stroke-width': hour ? 4 : 2.4, 'stroke-linecap': 'round',
+      opacity: hour ? 1 : 0.75 }, svg);
+  }
+  for (let n = 1; n <= 12; n++) {
+    const a = n * 30 * Math.PI / 180, r = 145;
+    const t = el('text', { x: r * Math.sin(a), y: -r * Math.cos(a), 'text-anchor': 'middle',
+      'dominant-baseline': 'central', fill: 'var(--fg)',
+      style: "font: 800 50px 'Google Sans Flex','Nunito',sans-serif; font-variation-settings:'ROND' 100; letter-spacing:-1px" }, svg);
+    t.textContent = n;
+  }
+  const hourDeg = (T.h % 12) * 30 + T.m * 0.5 + T.s / 120, minDeg = T.m * 6 + T.s * 0.1, secDeg = T.s * 6;
+  function hand(deg, len, width) {
+    const g = el('g', { transform: `rotate(${deg})` }, svg);
+    el('line', { x1: 0, y1: 0, x2: 0, y2: -24, stroke: 'var(--fg)', 'stroke-width': 5, 'stroke-linecap': 'round' }, g); // neck
+    el('line', { x1: 0, y1: -24, x2: 0, y2: -len, stroke: 'var(--fg)', 'stroke-width': width, 'stroke-linecap': 'round' }, g);
+    return g;
+  }
+  hand(hourDeg, 100, 15);
+  hand(minDeg, 168, 15);
+  el('circle', { r: 10, fill: 'var(--fg)' }, svg);                          // hub under second hand
+  const s = el('g', { transform: `rotate(${secDeg})` }, svg);
+  el('line', { x1: 0, y1: 32, x2: 0, y2: -182, stroke: 'var(--accent)', 'stroke-width': 3.2, 'stroke-linecap': 'round' }, s);
+  el('circle', { r: 6.5, fill: 'var(--accent)' }, svg);
+  el('circle', { r: 2.6, fill: '#000' }, svg);                             // centre ring
+}
+
+document.querySelectorAll('.clock').forEach(drawClock);
+document.querySelectorAll('.weather').forEach(w => w.innerHTML = weatherHTML());
+</script>
+</body>
+</html>

@@ -18,6 +18,10 @@ data class NotifSummary(
     /** What the posting app allows on a lock screen (public / publicVersion). */
     val publicTitle: String?,
     val postTime: Long,
+    /** The app's monochrome status-bar icon; tints cleanly to one colour. */
+    val smallIcon: android.graphics.drawable.Icon? = null,
+    /** Cache key for [smallIcon] (resource id, or 0). */
+    val iconKey: Int = 0,
 )
 
 /**
@@ -65,6 +69,10 @@ class NotificationFeed : NotificationListenerService() {
                         }
                     },
                     postTime = latest.postTime,
+                    smallIcon = latest.notification.smallIcon,
+                    iconKey = latest.notification.smallIcon?.let {
+                        if (it.type == android.graphics.drawable.Icon.TYPE_RESOURCE) it.resId else it.hashCode()
+                    } ?: 0,
                 )
             }
             .sortedByDescending { it.postTime }
