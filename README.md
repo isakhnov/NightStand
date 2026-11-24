@@ -10,8 +10,6 @@ charger and it goes away.
 
 > Status: **prototype**. It builds and its logic is unit-tested, but it hasn't run on a
 > real S26 Ultra yet. See [On-device test plan](#on-device-test-plan).
-> This lives inside `ytm-andr` for now and is self-contained, so it can move to its
-> own repo as-is (`git subtree split -P Nightstand` keeps its history).
 
 ---
 
@@ -177,4 +175,3 @@ The unit tests cover the logic; these are what only the phone can answer:
 - Settings: brightness levels, which calendars, clock style, 24h override.
 - Weather and alarm-time line (next `AlarmManager.getNextAlarmClock()`).
 - Optional `DreamService` host for idea A as a fallback.
-- Move to its own repo.
