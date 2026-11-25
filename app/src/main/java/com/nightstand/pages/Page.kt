@@ -34,6 +34,8 @@ abstract class Page(context: Context, val data: DisplayData) : View(context) {
     open fun onShown() {}
     open fun onHidden() {}
     open fun onTick() = invalidate()
+    /** A tap at (x, y). Return true if the page handled it (a button). */
+    open fun onTapAt(x: Float, y: Float): Boolean = false
     /** Data in [data] changed (events, notifications, battery). */
     open fun onDataChanged() = invalidate()
 
@@ -47,6 +49,9 @@ object PageRegistry {
 
     val all = listOf(
         Entry(ClockAgendaPage.ID, "Clock + up next") { c, d -> ClockAgendaPage(c, d) },
+        Entry(WeatherPage.ID, "Clock + weather") { c, d -> WeatherPage(c, d) },
         Entry(BigClockPage.ID, "Big clock") { c, d -> BigClockPage(c, d) },
+        Entry(PhotosPage.ID, "Clock + photos") { c, d -> PhotosPage(c, d) },
+        Entry(NowPlayingPage.ID, "Clock + now playing") { c, d -> NowPlayingPage(c, d) },
     )
 }

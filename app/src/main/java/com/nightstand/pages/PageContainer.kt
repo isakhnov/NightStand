@@ -104,7 +104,9 @@ class PageContainer(context: Context) : FrameLayout(context) {
                     }
                     animateTo(dx, dir)
                 } else if (mode == 0) {
-                    tap()
+                    // Controls on the page (e.g. play/pause) win over tap/double-tap
+                    // and fire immediately, without the double-tap delay.
+                    if (current?.onTapAt(e.x, e.y) != true) tap()
                 }
                 velocity?.recycle(); velocity = null
             }

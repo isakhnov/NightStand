@@ -23,6 +23,8 @@ import android.widget.SeekBar
 import android.widget.Switch
 import android.widget.TextView
 import com.nightstand.pages.PageRegistry
+import com.nightstand.photos.PhotoLibrary
+import com.nightstand.weather.Weather
 
 /**
  * Launcher screen: one row per permission with its live status and a button to
@@ -113,7 +115,15 @@ class SetupActivity : Activity() {
             requestPermissions(arrayOf(Manifest.permission.READ_CALENDAR), 2)
         }
 
-        row("Notification access", "Shows your notifications (optional)", NotificationFeed.isGranted(this)) {
+        row("Location (approximate)", "Weather for where you are", Weather.hasLocationPermission(this)) {
+            requestPermissions(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION), 3)
+        }
+
+        row("Photos", "Photo view; choose \"Allow all\" for the whole library", PhotoLibrary.isGranted(this)) {
+            requestPermissions(arrayOf(PhotoLibrary.permissionName()), 4)
+        }
+
+        row("Notification access", "Notifications strip and Spotify/now-playing view", NotificationFeed.isGranted(this)) {
             startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
         }
 
@@ -143,6 +153,19 @@ class SetupActivity : Activity() {
             })
         })
 
+        toggle("Temperature in °F (off = °C)", Prefs.fahrenheit(this)) { Prefs.setFahrenheit(this, it) }
+
+        val src = Prefs.photoSource(this)
+        val srcLabel = when (src) {
+            Prefs.PhotoSource.ALL -> "All photos"
+            Prefs.PhotoSource.FAVORITES -> "Favorites"
+            Prefs.PhotoSource.ALBUM -> "Album: " + (Prefs.photoAlbum(this)?.second ?: "—")
+        }
+        list.addView(Button(this).apply {
+            text = "Photo source: $srcLabel"
+            setOnClickListener { choosePhotoSource() }
+        })
+
         header("Views (swipe left/right to cycle)")
         val off = Prefs.disabledPages(this)
         for (e in PageRegistry.all) {
@@ -157,6 +180,25 @@ class SetupActivity : Activity() {
             text = "Live posture: ${StandByState.lastPosture} — debug log (newest first):"
             setTextColor(Color.WHITE); setPadding(0, 24, 0, 0)
         })
+    }
+
+    private fun choosePhotoSource() {
+        val albums = PhotoLibrary.albums(this)
+        val items = listOf("All photos", "Favorites") + albums.map { "${it.name}  (${it.count})" }
+        android.app.AlertDialog.Builder(this)
+            .setTitle("Photos on this phone")
+            .setItems(items.toTypedArray()) { _, i ->
+                when (i) {
+                    0 -> Prefs.setPhotoSource(this, Prefs.PhotoSource.ALL)
+                    1 -> Prefs.setPhotoSource(this, Prefs.PhotoSource.FAVORITES)
+                    else -> albums[i - 2].let {
+                        Prefs.setPhotoAlbum(this, it.id, it.name)
+                        Prefs.setPhotoSource(this, Prefs.PhotoSource.ALBUM)
+                    }
+                }
+                render()
+            }
+            .show()
     }
 
     private fun header(title: String) {

@@ -39,4 +39,23 @@ object Prefs {
     /** Page shown last; Nightstand reopens on it. */
     fun lastPage(c: Context) = sp(c).getString("lastPage", null)
     fun setLastPage(c: Context, id: String) = sp(c).edit().putString("lastPage", id).apply()
+
+    /** Temperature unit: °F by default (user's choice), °C optional. */
+    fun fahrenheit(c: Context) = sp(c).getBoolean("fahrenheit", true)
+    fun setFahrenheit(c: Context, v: Boolean) = sp(c).edit().putBoolean("fahrenheit", v).apply()
+
+    fun weatherCache(c: Context) = sp(c).getString("weatherCache", null)
+    fun setWeatherCache(c: Context, v: String) = sp(c).edit().putString("weatherCache", v).apply()
+
+    enum class PhotoSource { ALL, FAVORITES, ALBUM }
+    fun photoSource(c: Context) =
+        runCatching { PhotoSource.valueOf(sp(c).getString("photoSource", null)!!) }.getOrDefault(PhotoSource.ALL)
+    fun setPhotoSource(c: Context, v: PhotoSource) = sp(c).edit().putString("photoSource", v.name).apply()
+    /** MediaStore BUCKET_ID + display name of the chosen album. */
+    fun photoAlbum(c: Context): Pair<String, String>? {
+        val id = sp(c).getString("photoAlbumId", null) ?: return null
+        return id to (sp(c).getString("photoAlbumName", null) ?: "Album")
+    }
+    fun setPhotoAlbum(c: Context, id: String, name: String) =
+        sp(c).edit().putString("photoAlbumId", id).putString("photoAlbumName", name).apply()
 }

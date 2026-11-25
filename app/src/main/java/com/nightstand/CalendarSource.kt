@@ -16,11 +16,13 @@ data class Event(
 )
 
 /**
- * Upcoming events from Android's shared calendar provider. Samsung Calendar,
- * Google Calendar and Exchange/Outlook accounts all sync into it, so nothing
- * account-specific is needed.
+ * Upcoming events from Android's shared calendar provider, restricted to
+ * Google accounts (Google Calendar). Outlook/Exchange and local Samsung
+ * calendars are deliberately excluded.
  */
 object CalendarSource {
+    const val GOOGLE_ACCOUNT_TYPE = "com.google"
+
     fun isGranted(c: Context) =
         c.checkSelfPermission(Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED
 
@@ -47,10 +49,14 @@ object CalendarSource {
             CalendarContract.Instances.DISPLAY_COLOR,
             CalendarContract.Instances.SELF_ATTENDEE_STATUS,
         )
+        val ids = googleCalendarIds(c).ifEmpty { return emptyList() }.joinToString(",")
         val out = mutableListOf<Event>()
         try {
             c.contentResolver.query(
-                uri, proj, "${CalendarContract.Instances.VISIBLE}=1", null,
+                uri, proj,
+                // Google Calendar accounts only (user's choice: no Outlook/work sources).
+                "${CalendarContract.Instances.VISIBLE}=1 AND ${CalendarContract.Instances.CALENDAR_ID} IN ($ids)",
+                null,
                 "${CalendarContract.Instances.BEGIN} ASC"
             )?.use { cur ->
                 while (cur.moveToNext()) {
@@ -68,6 +74,17 @@ object CalendarSource {
         }
         // Timed events first by start, all-day ones of today float to the top.
         return out.sortedWith(compareBy({ !it.allDay }, { it.begin })).take(limit)
+    }
+
+    private fun googleCalendarIds(c: Context): List<Long> {
+        val out = mutableListOf<Long>()
+        try {
+            c.contentResolver.query(
+                CalendarContract.Calendars.CONTENT_URI, arrayOf(CalendarContract.Calendars._ID),
+                "${CalendarContract.Calendars.ACCOUNT_TYPE}=?", arrayOf(GOOGLE_ACCOUNT_TYPE), null
+            )?.use { cur -> while (cur.moveToNext()) out += cur.getLong(0) }
+        } catch (_: SecurityException) {}
+        return out
     }
 
     private fun utcDayToLocal(utcMidnight: Long): Long {

@@ -9,10 +9,23 @@ Swipe left/right to cycle views, up/down to set night brightness. Tap to
 brighten for a moment, double-tap to unlock. Pick it up or pull the charger and
 it goes away.
 
-**Views** (`pages/`, registered in `PageRegistry`): *Clock + up next* and *Big
-clock*, each with an analog (iOS-style) or digital clock. Candidate views in
-research — work calendar, clock + weather, photos, now playing — each have a
-feasibility study and mockups in [`docs/views/`](docs/views/).
+**Views** (`pages/`, registered in `PageRegistry`; each can be switched off in
+setup; analog or digital clock everywhere):
+
+| View | Left | Right |
+|---|---|---|
+| Clock + up next | clock | Google Calendar events, notifications strip |
+| Clock + weather | clock | place, temperature (°F default, °C option), condition, H/L — Open-Meteo, approximate location |
+| Big clock | full-screen clock | — |
+| Clock + photos | clock | photos on the phone (all / favourites / one album): starts as the whole photo, zooms to fill, pans across; red monochrome and still at night |
+| Clock + now playing | clock | album art, title, artist, progress, ⏮ ⏯ ⏭ for the active media session (Spotify preferred; works with any player) |
+
+Calendar is Google accounts only (Outlook/work deliberately excluded). Weather
+data: [Open-Meteo](https://open-meteo.com/) (CC BY 4.0). Research and mockups
+for each view: [`docs/views/`](docs/views/).
+
+**Previews without a device:** `./gradlew testDebugUnitTest --tests com.nightstand.PagePreviewTest`
+renders every view, day and night, analog and digital, to `app/build/previews/`.
 
 > Status: **prototype**. It builds and its logic is unit-tested, but it hasn't run on a
 > real S26 Ultra yet. See [On-device test plan](#on-device-test-plan).
@@ -140,7 +153,7 @@ UI 9's battery protection stops charging at 80/90% while the phone is still on t
 
 ```bash
 ./build.sh            # builds, installs and opens setup if a device is attached via adb
-./gradlew testDebugUnitTest --no-daemon   # 18 JVM unit tests, no device needed
+./gradlew testDebugUnitTest --no-daemon   # JVM unit tests + page previews, no device needed
 ```
 Toolchain matches the sibling projects: AGP 8.5.2, Kotlin 1.9.24, Gradle 8.7, JDK
 17/21, compileSdk 36, targetSdk 35, minSdk 30. No Compose, no AndroidX beyond

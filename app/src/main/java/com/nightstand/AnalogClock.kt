@@ -16,7 +16,7 @@ object AnalogClock {
     private val tick = Paint(Paint.ANTI_ALIAS_FLAG).apply { strokeCap = Paint.Cap.ROUND }
     private val hand = Paint(Paint.ANTI_ALIAS_FLAG).apply { strokeCap = Paint.Cap.ROUND }
     private val num = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        typeface = Fonts.semibold; textAlign = Paint.Align.CENTER
+        typeface = Fonts.bold; textAlign = Paint.Align.CENTER
     }
 
     fun draw(c: Canvas, cx: Float, cy: Float, r: Float, t: Calendar, p: Palette, showSeconds: Boolean) {
