@@ -20,6 +20,7 @@ import com.nightstand.CalendarSource
 import com.nightstand.NotificationFeed
 import com.nightstand.Palette
 import com.nightstand.Prefs
+import com.nightstand.WatcherService
 import com.nightstand.pages.DisplayData
 import com.nightstand.pages.PageRegistry
 import com.nightstand.pages.PhotosPage
@@ -37,10 +38,32 @@ object PagePreview {
     const val W = 915
     const val H = 412
 
-    suspend fun render(c: Context, id: String, night: Boolean): ImageBitmap {
+    /**
+     * Never throws: a preview that fails to draw must not take the settings
+     * screen down with it (0.5 crashed on open this way). On failure the
+     * error goes to the log and a plain placeholder is shown.
+     */
+    suspend fun render(c: Context, id: String, night: Boolean): ImageBitmap = try {
+        renderUnsafe(c, id, night)
+    } catch (t: Throwable) {
+        WatcherService.log("preview $id failed: $t")
+        placeholder()
+    }
+
+    private fun placeholder(): ImageBitmap {
+        val b = Bitmap.createBitmap(W, H, Bitmap.Config.ARGB_8888)
+        val cv = Canvas(b)
+        cv.drawColor(android.graphics.Color.BLACK)
+        cv.drawText("Preview unavailable", W / 2f, H / 2f, android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            color = 0xFF8E8E93.toInt(); textSize = 28f; textAlign = android.graphics.Paint.Align.CENTER
+        })
+        return b.asImageBitmap()
+    }
+
+    private suspend fun renderUnsafe(c: Context, id: String, night: Boolean): ImageBitmap {
         // Photos: decode one real photo off the main thread first.
         val photo = if (id == PhotosPage.ID) withContext(Dispatchers.IO) {
-            PhotoLibrary.query(c).firstOrNull()?.let { PhotoLibrary.decode(c, it, 1000) }
+            PhotoLibrary.query(c).firstOrNull()?.let { PhotoLibrary.decode(c, it, 1000, software = true) }
         } else null
         val data = withContext(Dispatchers.IO) {
             Weather.loadCache(c)

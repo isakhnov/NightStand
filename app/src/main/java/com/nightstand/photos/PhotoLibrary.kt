@@ -70,9 +70,15 @@ object PhotoLibrary {
         return counts.values.sortedByDescending { it.count }
     }
 
-    /** Decode for display, long side capped at [maxSide] px; EXIF rotation applied. */
-    fun decode(c: Context, uri: Uri, maxSide: Int): Bitmap? = runCatching {
+    /**
+     * Decode for display, long side capped at [maxSide] px; EXIF rotation applied.
+     * [software]: required when the bitmap will be drawn on a Bitmap-backed
+     * Canvas (settings previews). ImageDecoder's default is a HARDWARE bitmap,
+     * and drawing one in software throws — that crashed the 0.5 settings screen.
+     */
+    fun decode(c: Context, uri: Uri, maxSide: Int, software: Boolean = false): Bitmap? = runCatching {
         ImageDecoder.decodeBitmap(ImageDecoder.createSource(c.contentResolver, uri)) { d, info, _ ->
+            if (software) d.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
             val w = info.size.width; val h = info.size.height
             val s = minOf(1f, maxSide.toFloat() / maxOf(w, h))
             d.setTargetSize((w * s).toInt().coerceAtLeast(1), (h * s).toInt().coerceAtLeast(1))

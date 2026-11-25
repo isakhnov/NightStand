@@ -34,6 +34,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.nightstand.CrashReporter
 import com.nightstand.NightstandActivity
 import com.nightstand.Prefs
 import com.nightstand.WatcherService
@@ -60,6 +61,24 @@ fun HomeTab(s: SettingsScope) {
     Column(Modifier.verticalScroll(rememberScrollState())) {
         ScreenHeader("Nightstand", "v$version · ${android.os.Build.MODEL}")
         Column(Modifier.padding(horizontal = 14.dp)) {
+            var crash by remember { mutableStateOf(CrashReporter.last(c)) }
+            crash?.let { report ->
+                SettingsCard(color = WarnBg) {
+                    Text("Nightstand crashed last time", color = Warn, fontWeight = FontWeight.Bold)
+                    Text(report.lineSequence().take(3).joinToString("\n"), fontSize = 12.sp, color = Muted,
+                        modifier = Modifier.padding(top = 4.dp, bottom = 8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button({
+                            c.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_SUBJECT, "Nightstand crash report")
+                                putExtra(Intent.EXTRA_TEXT, report + "\n\n--- log ---\n" + com.nightstand.StandByState.logText())
+                            }, "Share crash report").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                        }) { Text("Share report") }
+                        androidx.compose.material3.OutlinedButton({ CrashReporter.clear(c); crash = null }) { Text("Dismiss") }
+                    }
+                }
+            }
             // Status
             SettingsCard(color = if (missing == 0) OkBg else WarnBg) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {

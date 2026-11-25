@@ -24,6 +24,7 @@
     </queries>
 
     <application
+        android:name=".NightstandApp"
         android:label="Nightstand"
         android:icon="@mipmap/ic_launcher"
         android:theme="@style/Theme.Nightstand">
