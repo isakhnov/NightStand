@@ -64,3 +64,29 @@ class AlarmsTimersTest {
         assertEquals("in 12 m", formatIn(12 * 60_000L))
     }
 }
+
+class AlarmNotificationParserTest {
+    private val google = "com.google.android.deskclock"
+    // 2026-11-25 17:30 local
+    private val now = java.util.Calendar.getInstance().apply { set(2026, 10, 25, 17, 30, 0); set(java.util.Calendar.MILLISECOND, 0) }.timeInMillis
+
+    private fun hm(t: Long) = java.util.Calendar.getInstance().apply { timeInMillis = t }.let {
+        it.get(java.util.Calendar.HOUR_OF_DAY) to it.get(java.util.Calendar.MINUTE)
+    }
+
+    @org.junit.Test fun upcomingAlarm_tomorrowMorning() {
+        val a = com.nightstand.clock.AlarmNotificationParser.parse(google, "Upcoming alarm", "Thu 7:00 AM", now, false)!!
+        org.junit.Assert.assertEquals(7 to 0, hm(a.triggerAt))
+        org.junit.Assert.assertTrue(a.triggerAt > now)
+    }
+
+    @org.junit.Test fun snoozed_pm() {
+        val a = com.nightstand.clock.AlarmNotificationParser.parse(google, "Alarm", "Snoozing until 9:40 PM", now, false)!!
+        org.junit.Assert.assertEquals(21 to 40, hm(a.triggerAt))
+    }
+
+    @org.junit.Test fun ignoresTimersAndOtherApps() {
+        org.junit.Assert.assertNull(com.nightstand.clock.AlarmNotificationParser.parse(google, "Timer", "4:59", now, false))
+        org.junit.Assert.assertNull(com.nightstand.clock.AlarmNotificationParser.parse("com.whatsapp", "Alarm", "7:00 AM", now, false))
+    }
+}

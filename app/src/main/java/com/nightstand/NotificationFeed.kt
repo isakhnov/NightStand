@@ -44,6 +44,11 @@ class NotificationFeed : NotificationListenerService() {
         val now = System.currentTimeMillis()
         val clock = all.filter { it.packageName in com.nightstand.clock.ClockApps.PACKAGES }
         timers = clock.mapNotNull { com.nightstand.clock.TimerParser.parse(fields(it), now) }
+        val is24 = android.text.format.DateFormat.is24HourFormat(this)
+        notifiedAlarm = clock.mapNotNull {
+            val f = fields(it)
+            com.nightstand.clock.AlarmNotificationParser.parse(f.pkg, f.title, f.text, now, is24)
+        }.minByOrNull { it.triggerAt }
         clockDump = clock.joinToString("\n\n") { dump(it) }
         snapshot = all.asSequence()
             .filter { it.packageName != packageName }
@@ -117,6 +122,9 @@ class NotificationFeed : NotificationListenerService() {
         @Volatile var snapshot: List<NotifSummary> = emptyList()
             private set
         @Volatile var timers: List<com.nightstand.clock.RunningTimer> = emptyList()
+            private set
+        /** Alarm time from a clock app's own "Upcoming alarm"/"Snoozed" notification. */
+        @Volatile var notifiedAlarm: com.nightstand.clock.NextAlarm? = null
             private set
         /** Debug → "Capture clock notifications". */
         @Volatile var clockDump: String = ""

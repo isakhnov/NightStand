@@ -46,8 +46,13 @@ object Alarms {
      */
     fun next(c: Context, now: Long = System.currentTimeMillis()): NextAlarm? {
         if (!Prefs.showAlarm(c)) return null
-        val info = c.getSystemService(AlarmManager::class.java).nextAlarmClock ?: return null
-        return filter(NextAlarm(info.triggerTime, info.showIntent?.creatorPackage), now)
+        val info = c.getSystemService(AlarmManager::class.java).nextAlarmClock
+        val fromSystem = info?.let { filter(NextAlarm(it.triggerTime, it.showIntent?.creatorPackage), now) }
+        // Android exposes only ONE next alarm. If something else holds that slot
+        // (seen on the S26: a 9:30 PM entry with no owner — likely a bedtime
+        // schedule), fall back to the clock app's "Upcoming alarm"/"Snoozed"
+        // notification, which carries the real alarm time.
+        return fromSystem ?: com.nightstand.NotificationFeed.notifiedAlarm?.let { filter(it, now) }
     }
 
     /**
@@ -63,7 +68,11 @@ object Alarms {
         } ?: "unknown app"
         val time = android.text.format.DateFormat.format(
             if (android.text.format.DateFormat.is24HourFormat(c)) "EEE HH:mm" else "EEE h:mm a", info.triggerTime)
+        val fallback = com.nightstand.NotificationFeed.notifiedAlarm?.let { filter(it, now) }
         val why = when {
+            pkg == null && fallback != null -> "owner unknown; using clock notification instead"
+            pkg == null -> "hidden: set by an app that doesn't identify itself (often a Bedtime/Sleep " +
+                "schedule). It holds Android's single next-alarm slot, so your clock alarm appears once it has passed"
             pkg !in ClockApps.PACKAGES -> "hidden: not a clock app ($pkg)"
             info.triggerTime - now > WINDOW_MS -> "hidden: more than 24 h away"
             !Prefs.showAlarm(c) -> "hidden: Next alarm is off"
@@ -135,6 +144,35 @@ object TimerParser {
         return if (paused) RunningTimer(RunningTimer.State.PAUSED, pausedRemainingMs = ms, label = label)
         // Static time, not paused, no chronometer: assume running from now (updates when the notification does).
         else RunningTimer(RunningTimer.State.RUNNING, endsAt = now + ms, label = label)
+    }
+}
+
+/**
+ * A clock app's own alarm notification ("Upcoming alarm · Thu 7:00 AM",
+ * "Snoozing until 7:10 AM") → the alarm time. Pure; unit-tested.
+ */
+object AlarmNotificationParser {
+    private val TIME = Regex("""(?i)\b(\d{1,2}):(\d{2})\s*([ap]\.?\s?m\.?)?""")
+
+    fun parse(pkg: String, title: String?, text: String?, now: Long, is24h: Boolean): NextAlarm? {
+        if (pkg !in ClockApps.PACKAGES) return null
+        val all = listOfNotNull(title, text).joinToString(" ")
+        val lower = all.lowercase()
+        if ("alarm" !in lower && "snooz" !in lower) return null
+        if ("timer" in lower) return null
+        val m = TIME.find(all) ?: return null
+        var h = m.groupValues[1].toInt()
+        val min = m.groupValues[2].toInt()
+        val ampm = m.groupValues[3].lowercase()
+        if (ampm.startsWith("p") && h < 12) h += 12
+        if (ampm.startsWith("a") && h == 12) h = 0
+        if (ampm.isEmpty() && !is24h && h > 23) return null
+        val cal = java.util.Calendar.getInstance().apply {
+            timeInMillis = now; set(java.util.Calendar.HOUR_OF_DAY, h); set(java.util.Calendar.MINUTE, min)
+            set(java.util.Calendar.SECOND, 0); set(java.util.Calendar.MILLISECOND, 0)
+            if (timeInMillis <= now) add(java.util.Calendar.DAY_OF_YEAR, 1)
+        }
+        return NextAlarm(cal.timeInMillis, pkg)
     }
 }
 
