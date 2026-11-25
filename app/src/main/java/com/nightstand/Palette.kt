@@ -60,7 +60,6 @@ object Fonts {
     val heavy: Typeface = Typeface.create(Typeface.DEFAULT, 800, false)
     val bold: Typeface = Typeface.create(Typeface.DEFAULT, 700, false)
     val semibold: Typeface = Typeface.create(Typeface.DEFAULT, 600, false)
-    val regular: Typeface = Typeface.create(Typeface.DEFAULT, 400, false)
 }
 
 object BurnIn {

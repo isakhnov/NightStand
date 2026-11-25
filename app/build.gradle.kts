@@ -16,12 +16,35 @@ android {
         // foreground service started from BOOT_COMPLETED, full-screen intent,
         // overlay-permission background launch — is allowed at 35.
         targetSdk = 35
-        versionCode = 6
-        versionName = "0.5.1"
+        versionCode = 7
+        versionName = "0.6"
+    }
+
+    // One key for every build, so each APK installs over the last one.
+    // The key is NOT in git (public repo): keep signing/nightstand.keystore
+    // (or set NIGHTSTAND_KEYSTORE). Without it, builds fall back to this
+    // machine's debug key and will not update an already-installed app.
+    val ksFile = (System.getenv("NIGHTSTAND_KEYSTORE") ?: "${rootDir}/signing/nightstand.keystore").let(::file)
+    signingConfigs {
+        create("nightstand") {
+            storeFile = ksFile
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
     }
 
     buildTypes {
-        release { isMinifyEnabled = false }
+        // What gets installed on the phone: R8-shrunk and optimised.
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.getByName(if (ksFile.exists()) "nightstand" else "debug")
+        }
+        debug {
+            if (ksFile.exists()) signingConfig = signingConfigs.getByName("nightstand")
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -35,7 +58,6 @@ android {
 }
 
 dependencies {
-    implementation("androidx.core:core-ktx:1.13.1")
     implementation(platform("androidx.compose:compose-bom:2024.09.03"))
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.ui:ui")

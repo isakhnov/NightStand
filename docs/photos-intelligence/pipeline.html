@@ -1,0 +1,33 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+body{margin:0;font:14px system-ui,sans-serif;background:#fff;color:#1d1d1f}
+.w{width:1100px;padding:24px}
+h1{font-size:18px;margin:0 0 16px}
+.row{display:flex;align-items:stretch;gap:10px}
+.b{border:1.5px solid #888;border-radius:10px;padding:10px 12px;flex:1;background:#f6f6f8}
+.b b{display:block;margin-bottom:4px}
+.b small{color:#555;line-height:1.35;display:block}
+.ar{align-self:center;font-size:22px;color:#888}
+.t0{border-color:#8a8a8a}.t1{border-color:#2f6fdf;background:#eef4ff}.t2{border-color:#b26b00;background:#fff6e8}.t3{border-color:#1f8a4c;background:#eefaf2}
+.out{display:flex;gap:10px;margin-top:14px}
+.k{background:#e6f6ec;border-color:#1f8a4c}.u{background:#fff6e8;border-color:#b26b00}.j{background:#fdeceb;border-color:#c0392b}
+.note{margin-top:14px;color:#555;font-size:12.5px}
+</style></head><body><div class="w">
+<h1>Nightstand photos intelligence: proposed pipeline (all on device, runs while charging)</h1>
+<div class="row">
+<div class="b t0"><b>MediaStore</b><small>new/changed by GENERATION_MODIFIED; ContentObserver</small></div><div class="ar">→</div>
+<div class="b t0"><b>Tier 0 heuristics</b><small>bucket (Screenshots, Download, WhatsApp), PNG/tiny, EXIF camera, blur/dark, bursts</small></div><div class="ar">→</div>
+<div class="b t1"><b>Tier 1 embedding</b><small>256px thumbnail → MobileCLIP2-S0 INT8 (~11 MB), cos vs ~30 precomputed prompt vectors</small></div><div class="ar">→</div>
+<div class="b t1"><b>Tier 1b signals</b><small>ML Kit faces (count/size); OCR text density only for doc-like</small></div><div class="ar">→</div>
+<div class="b t3"><b>Score</b><small>zero-shot margin + faces + text + blur; later personal logistic head (from feedback)</small></div>
+</div>
+<div class="out">
+<div class="b k"><b>KEEP</b><small>→ slideshow pool: diversity (embedding novelty), recency, "on this day"</small></div>
+<div class="b u"><b>UNSURE (~5–10 %)</b><small>→ optional Tier 2 SLM judge (Gemini Nano Prompt API while display is foreground, or Gemma 4 E2B via LiteRT-LM on charge) → review grid</small></div>
+<div class="b j"><b>JUNK</b><small>targets, panels/wiring, parking, receipts, docs, labels, whiteboards, return shots, dups</small></div>
+</div>
+<div class="out">
+<div class="b t3"><b>Feedback loop</b><small>display long-press: Hide / More like this · Settings review grid of most-uncertain · labels → retrain head (ms, plain Kotlin)</small></div>
+<div class="b t0"><b>Room DB</b><small>id, hash, 512×fp16 embedding, signals, verdict + source, user label, model_version (~25–40 MB / 20k)</small></div>
+</div>
+<div class="note">Budgets (estimates): APK +~25 MB · ~40–80 ms/photo · 20k photos ≈ 15–45 min on charge · target ≥95 % precision on "show".</div>
+</div></body></html>

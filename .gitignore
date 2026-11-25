@@ -13,3 +13,6 @@ nightstand.log
 # IDE files
 .idea/
 *.iml
+
+# Signing key: never commit (repo is public). Keep your own copy.
+signing/

@@ -161,6 +161,16 @@ UI 9's battery protection stops charging at 80/90% while the phone is still on t
 
 ## Build
 
+**Signing key (important).** Every APK must be signed with the same key, or
+Android refuses to update the installed app (only uninstall + reinstall, which
+wipes settings). The repo is public, so the key is *not* in git: keep your copy
+of `nightstand.keystore` and put it at `signing/nightstand.keystore` (or point
+`NIGHTSTAND_KEYSTORE` at it) before building. `signing/` is git-ignored.
+
+**Release build** (what goes on the phone): R8-shrunk, ~1.9 MB
+(`app/build/outputs/apk/release/app-release.apk`). Debug builds are ~23 MB
+because nothing is shrunk; use them only for tests/previews.
+
 ```bash
 ./build.sh            # builds, installs and opens setup if a device is attached via adb
 ./gradlew testDebugUnitTest --no-daemon   # JVM unit tests + page previews, no device needed

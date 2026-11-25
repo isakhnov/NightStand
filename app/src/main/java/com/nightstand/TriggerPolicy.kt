@@ -55,7 +55,4 @@ class TriggerPolicy {
     }
 
     fun shouldShow(): Boolean = charging && landscape && locked && armed && !visible
-
-    /** Nightstand should close itself: charger pulled or phone picked up. */
-    fun shouldHide(): Boolean = visible && (!charging || !landscape)
 }

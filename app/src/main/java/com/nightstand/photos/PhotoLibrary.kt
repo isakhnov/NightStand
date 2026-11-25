@@ -19,8 +19,6 @@ object PhotoLibrary {
     private val permission =
         if (Build.VERSION.SDK_INT >= 33) Manifest.permission.READ_MEDIA_IMAGES else Manifest.permission.READ_EXTERNAL_STORAGE
 
-    fun permissionName() = permission
-
     /** Full or Android 14 "selected photos" access both count. */
     fun isGranted(c: Context) =
         c.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED ||

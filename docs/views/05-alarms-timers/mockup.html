@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<!-- Nightstand view 05 - Alarms & timers on the clock faces. Visual prototype only (not app code).
+     915x412 CSS px = S26 Ultra landscape (1 CSS px = 1 dp). Query params:
+       face=analog|digital   night   alt
+     Geometry copies AnalogClock.kt / ClockSplitPage.kt / WeatherPage.kt (r = 192, cx = cy = 206). -->
+<html><head><meta charset="utf-8"><title>Nightstand - alarms and timers mockup</title>
+<style>
+  html,body { margin:0; width:915px; height:412px; background:#000; overflow:hidden; }
+  svg { display:block; font-family: Roboto, Inter, "Helvetica Neue", Arial, sans-serif; }
+  .tab { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+</style></head>
+<body>
+<svg id="s" width="915" height="412" viewBox="0 0 915 412" xmlns="http://www.w3.org/2000/svg"></svg>
+<script>
+const q = new URLSearchParams(location.search);
+const NIGHT = q.has('night'), ALT = q.has('alt'), FACE = q.get('face') || 'analog';
+const RED = '#FF0000';
+const C = NIGHT
+  ? { primary: RED, secondary: 'rgba(255,0,0,.65)', accent: RED, second: RED, dim: 'rgba(255,0,0,.28)' }
+  : { primary: '#F5F5F7', secondary: '#8E8E93', accent: '#FF9F0A', second: '#FF9F0A', dim: '#3A3A3C' };
+const S = document.getElementById('s');
+let out = '';
+const add = s => out += s;
+const rad = d => d * Math.PI / 180;
+const pol = (cx, cy, r, deg) => [cx + Math.sin(rad(deg)) * r, cy - Math.cos(rad(deg)) * r];
+
+// ---- Scenario (times are what the app would derive from AlarmManager / clock-app notifications) ----
+// Day:   7:41:18 PM, next alarm 6:30 AM (in 10 h 49 m), timer "Pasta" ends 7:46:17 (4:59 left), 2nd timer paused 12:00.
+// Night: 11:41:18 PM, next alarm 6:30 AM (in 6 h 49 m), timer "Sleep sounds" 18:20 left.
+// Alt digital: last-minute takeover, 7:45:35 PM, Pasta 0:42 left.
+const T = NIGHT ? { h: 11, m: 41, s: 18, timer: '18:20', timerMin: 18 + 20/60, label: 'Sleep sounds', inText: '6 h 49 m' }
+                : { h: 7, m: 41, s: 18, timer: '4:59', timerMin: 4 + 59/60, label: 'Pasta', inText: '10 h 49 m' };
+const ALARM = { h: 6, m: 30, text: '6:30', ampm: 'AM' };
+
+// ---- Icons (24-unit boxes) ----
+function bell(x, y, size, fill) {   // centred at x,y
+  const k = size / 24;
+  add(`<g transform="translate(${x - size/2},${y - size/2}) scale(${k})" fill="${fill}">
+    <path d="M12 1.6c-.9 0-1.6.7-1.6 1.6v.5C7.3 4.5 5.4 7.1 5.4 10.2v4.6L3.2 17.6v1.3h17.6v-1.3l-2.2-2.8v-4.6c0-3.1-1.9-5.7-5-6.5v-.5c0-.9-.7-1.6-1.6-1.6z"/>
+    <path d="M9.4 20.2h5.2a2.6 2.6 0 0 1-5.2 0z"/></g>`);
+}
+function hourglass(x, y, size, fill) {
+  const k = size / 24;
+  add(`<g transform="translate(${x - size/2},${y - size/2}) scale(${k})" fill="${fill}">
+    <path d="M5 1.5h14v2.2h-1.4v2.6c0 2.2-1.3 4.1-3.3 5.7 2 1.6 3.3 3.5 3.3 5.7v2.6H19v2.2H5v-2.2h1.4v-2.6c0-2.2 1.3-4.1 3.3-5.7-2-1.6-3.3-3.5-3.3-5.7V3.7H5z
+             M8.8 3.7v2.6c0 1.2.8 2.5 2.4 3.8h1.6c1.6-1.3 2.4-2.6 2.4-3.8V3.7zM12 14.2c-2.1 1.5-3.2 3-3.2 4.2v.2h6.4v-.2c0-1.2-1.1-2.7-3.2-4.2z" fill-rule="evenodd"/></g>`);
+}
+function pause(x, y, size, fill) {
+  const k = size / 24;
+  add(`<g transform="translate(${x - size/2},${y - size/2}) scale(${k})" fill="${fill}">
+    <rect x="5" y="3" width="5" height="18" rx="1.5"/><rect x="14" y="3" width="5" height="18" rx="1.5"/></g>`);
+}
+function text(x, y, s, size, fill, weight = 700, anchor = 'start', extra = '') {
+  add(`<text x="${x}" y="${y}" font-size="${size}" font-weight="${weight}" fill="${fill}" text-anchor="${anchor}" class="tab" ${extra}>${s}</text>`);
+}
+function measure(s, size, weight) {
+  const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  t.setAttribute('font-size', size); t.setAttribute('font-weight', weight); t.setAttribute('class', 'tab');
+  t.textContent = s; S.appendChild(t); const w = t.getComputedTextLength(); S.removeChild(t); return w;
+}
+
+// ---- Analog face (AnalogClock.kt) ----
+function analog(cx, cy, r, opts) {
+  const hideTick = opts.hideTicks || (() => false);
+  for (let i = 0; i < 60; i++) {
+    if (hideTick(i * 6)) continue;
+    const hour = i % 5 === 0;
+    const [x1, y1] = pol(cx, cy, r - (hour ? r * .075 : r * .04), i * 6);
+    const [x2, y2] = pol(cx, cy, r, i * 6);
+    add(`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${hour ? C.primary : C.secondary}" stroke-width="${hour ? r*.018 : r*.011}" stroke-linecap="round"/>`);
+  }
+  if (opts.underlay) opts.underlay();
+  const fs = r * .2;
+  for (let h = 1; h <= 12; h++) {
+    if (opts.hideNumeral && opts.hideNumeral(h)) continue;
+    const [x, y] = pol(cx, cy, r * .76, h * 30);
+    text(x, y + fs * .36, h, fs, C.primary, 700, 'middle');
+  }
+  if (opts.readout) opts.readout();
+  const sec = T.s, min = T.m + sec / 60, hr = (T.h % 12) + min / 60;
+  hand(cx, cy, hr * 30, r * .5, r * .055, r);
+  hand(cx, cy, min * 6, r * .86, r * .055, r);
+  add(`<circle cx="${cx}" cy="${cy}" r="${r*.045}" fill="${C.primary}"/>`);
+  const [sx1, sy1] = pol(cx, cy, -r * .12, sec * 6), [sx2, sy2] = pol(cx, cy, r * .93, sec * 6);
+  add(`<line x1="${sx1}" y1="${sy1}" x2="${sx2}" y2="${sy2}" stroke="${C.second}" stroke-width="${r*.012}" stroke-linecap="round"/>`);
+  add(`<circle cx="${cx}" cy="${cy}" r="${r*.03}" fill="${C.second}"/><circle cx="${cx}" cy="${cy}" r="${r*.014}" fill="#000"/>`);
+}
+function hand(cx, cy, deg, len, width, r) {
+  const [x1, y1] = pol(cx, cy, r * .1, deg), [x2, y2] = pol(cx, cy, len, deg);
+  add(`<line x1="${cx}" y1="${cy}" x2="${x1}" y2="${y1}" stroke="${C.primary}" stroke-width="${width*.35}" stroke-linecap="round"/>`);
+  add(`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${C.primary}" stroke-width="${width}" stroke-linecap="round"/>`);
+}
+function arc(cx, cy, r, a0, a1, color, width, extra = '') {
+  const [x0, y0] = pol(cx, cy, r, a0), [x1, y1] = pol(cx, cy, r, a1);
+  const large = ((a1 - a0 + 360) % 360) > 180 ? 1 : 0;
+  add(`<path d="M${x0} ${y0} A${r} ${r} 0 ${large} 1 ${x1} ${y1}" fill="none" stroke="${color}" stroke-width="${width}" stroke-linecap="round" ${extra}/>`);
+}
+const within = (deg, a, half) => { const d = Math.abs(((deg - a) % 360 + 540) % 360 - 180); return d <= half; };
+
+// ---- Right pane: Clock + weather (WeatherPage.kt), as in app/build/previews ----
+function weather(x) {
+  text(x, 92, 'Cancún', 32.6, C.accent, 700);
+  const ax = x + measure('Cancún', 32.6, 700) + 11, asz = 20, y = 92;
+  add(`<path d="M${ax+asz} ${y-asz} L${ax} ${y-asz*.45} L${ax+asz*.45} ${y-asz*.4} L${ax+asz*.55} ${y} Z" fill="${C.accent}"/>`);
+  text(x - 6, 240, '77°', 161, C.primary, 800);
+  // rain icon
+  add(`<g fill="${C.primary}"><circle cx="${x+15}" cy="${282}" r="8"/><circle cx="${x+25}" cy="${277}" r="10"/><circle cx="${x+35}" cy="${284}" r="7"/>
+       <rect x="${x+7}" y="${282}" width="30" height="9" rx="4"/></g>
+       <g stroke="${C.primary}" stroke-width="2.4" stroke-linecap="round"><line x1="${x+12}" y1="296" x2="${x+9}" y2="303"/><line x1="${x+20}" y1="296" x2="${x+17}" y2="303"/><line x1="${x+28}" y1="296" x2="${x+25}" y2="303"/></g>`);
+  text(x + 50, 298, 'Rain', 32.6, C.primary, 700);
+  text(x, 351, 'H:80° L:77°', 32.6, C.primary, 700);
+}
+
+// =====================================================================================
+const cx = 206, cy = 206, r = 192;
+const minNow = T.m + T.s / 60;
+const timerEndDeg = ((minNow + T.timerMin) % 60) * 6, nowDeg = minNow * 6;
+const alarmDeg = ((ALARM.h % 12) + ALARM.m / 60) * 30;
+
+if (FACE === 'analog' && !ALT) {
+  // A1 (recommended): "on the ring". Timer = bezel arc from the minute hand to the minute the
+  // timer ends (only when < 60 min). Alarm = bell on the ring at the alarm's hour-hand position
+  // (only when < 12 h away). Small readout inside the dial, in the half the hands are NOT in.
+  const bellHalf = 5;
+  analog(cx, cy, r, {
+    hideTicks: deg => within(deg, alarmDeg, bellHalf) ||
+      (T.timerMin < 60 && ((deg - nowDeg + 360) % 360) <= ((timerEndDeg - nowDeg + 360) % 360)),
+    underlay: () => {
+      if (T.timerMin < 60) {
+        arc(cx, cy, r * .9625, nowDeg, timerEndDeg, C.accent, r * .075);
+        // end notch: dark gap + short bright stub so the end minute reads exactly
+        const [ex, ey] = pol(cx, cy, r * .9625, timerEndDeg);
+        add(`<circle cx="${ex}" cy="${ey}" r="${r*.052}" fill="${C.accent}"/><circle cx="${ex}" cy="${ey}" r="${r*.022}" fill="#000"/>`);
+      }
+      const [bx, by] = pol(cx, cy, r * .945, alarmDeg);
+      bell(bx, by, r * .15, C.primary);
+    },
+    readout: () => {
+      // Opposite the hour hand (the thick, short hand that would sit on the text).
+      const hrDeg = (((T.h % 12) + T.m / 60) * 30) % 360;
+      const top = hrDeg > 90 && hrDeg < 270;
+      const y0 = top ? cy - r * .40 : cy + r * .34;
+      const ts = r * .17, w = measure(T.timer, ts, 800), ic = ts * .8;
+      hourglass(cx - (w + ic * 1.15) / 2 + ic / 2, y0 - ts * .36, ic, C.accent);
+      text(cx - (w + ic * 1.15) / 2 + ic * 1.15, y0, T.timer, ts, C.accent, 800);
+      const as = r * .095, line = `${ALARM.text} ${ALARM.ampm}`, aw = measure(line, as, 700), bi = as * 1.05;
+      bell(cx - (aw + bi * 1.2) / 2 + bi / 2, y0 + as * 1.55 - as * .36, bi, C.secondary);
+      text(cx - (aw + bi * 1.2) / 2 + bi * 1.2, y0 + as * 1.55, line, as, C.secondary, 700);
+    },
+  });
+  weather(528);
+}
+
+if (FACE === 'analog' && ALT) {
+  // A2 (alternative): chronograph sub-dials. Timer ring at 6 o'clock with remaining fraction;
+  // alarm text at 12 o'clock. Ring untouched.
+  analog(cx, cy, r, {
+    readout: () => {
+      const sx = cx, sy = cy + r * .40, sr = r * .2;
+      add(`<circle cx="${sx}" cy="${sy}" r="${sr}" fill="none" stroke="${C.dim}" stroke-width="${r*.022}"/>`);
+      const total = NIGHT ? 30 : 10, frac = T.timerMin / total;   // assumes total duration is known
+      arc(sx, sy, sr, 0, 360 * frac - .01, C.accent, r * .022);
+      text(sx, sy + r * .03, T.timer, r * .13, C.accent, 800, 'middle');
+      text(sx, sy + r * .115, T.label.toUpperCase(), r * .048, C.secondary, 700, 'middle', 'letter-spacing="1"');
+      const ay = cy - r * .40, as = r * .11, line = ALARM.text, aw = measure(line, as, 800), bi = as;
+      bell(cx - (aw + bi * 1.2) / 2 + bi / 2, ay - as * .36, bi, C.primary);
+      text(cx - (aw + bi * 1.2) / 2 + bi * 1.2, ay, line, as, C.primary, 800);
+      text(cx, ay + r * .085, `IN ${T.inText.toUpperCase()}`, r * .048, C.secondary, 700, 'middle', 'letter-spacing="1"');
+    },
+  });
+  weather(528);
+}
+
+if (FACE === 'digital' && !ALT) {
+  // D1 (recommended): status lines under the date. Alarm: bell + time + "in 10 h 49 m".
+  // Timers: outlined chips, soonest first, counting down; paused chip dimmed with pause glyph.
+  const ts = 155, x = 14, base = 196;
+  text(x - 4, base, NIGHT ? '11:41' : '7:41', ts, C.primary, 800);
+  text(x + 4, base + 46, NIGHT ? 'Wed, Nov 25' : 'Wed, Nov 25', 26, C.accent, 700);
+  // alarm line
+  const ay = base + 92, as = 25;
+  bell(x + 4 + 12, ay - 9, 25, C.primary);
+  text(x + 4 + 32, ay, `${ALARM.text} ${ALARM.ampm}`, as, C.primary, 700);
+  const aw = measure(`${ALARM.text} ${ALARM.ampm}`, as, 700);
+  text(x + 4 + 32 + aw + 10, ay, `· in ${T.inText}`, as, C.secondary, 600);
+  // timer chips
+  const cy0 = ay + 26, ch = 42;
+  function chip(x0, label, value, color, paused) {
+    const vs = 26, ls = 17, vw = measure(value, vs, 800), lw = measure(label, ls, 700);
+    const w = 14 + 22 + 8 + vw + 10 + lw + 16;
+    add(`<rect x="${x0}" y="${cy0}" width="${w}" height="${ch}" rx="${ch/2}" fill="none" stroke="${color}" stroke-width="2.5"/>`);
+    (paused ? pause : hourglass)(x0 + 14 + 11, cy0 + ch / 2, 22, color);
+    text(x0 + 14 + 22 + 8, cy0 + ch / 2 + vs * .36, value, vs, color, 800);
+    text(x0 + 14 + 22 + 8 + vw + 10, cy0 + ch / 2 + ls * .36, label, ls, paused ? C.secondary : C.secondary, 700);
+    return x0 + w + 10;
+  }
+  let nx = chip(x + 4, T.label, T.timer, C.accent, false);
+  if (!NIGHT) chip(nx, 'Rice', '12:00', C.secondary, true);
+  weather(528);
+}
+
+if (FACE === 'digital' && ALT) {
+  // D2 (alternative): the clock column stays pure (time + date). Alarm/timers live in a small
+  // status pill top-right, and in a timer's last 60 s the right pane becomes a big countdown.
+  const ts = 155, x = 14, base = 251;
+  text(x - 4, base, NIGHT ? '11:58' : '7:45', ts, C.primary, 800);
+  text(x + 4, base + 61, 'Wed, Nov 25', 26, C.accent, 700);
+  // top-right status pill
+  const pw = 150, px = 915 - 24 - pw, py = 18;
+  add(`<rect x="${px}" y="${py}" width="${pw}" height="34" rx="17" fill="none" stroke="${C.dim}" stroke-width="2"/>`);
+  bell(px + 22, py + 17, 20, C.secondary);
+  text(px + 38, py + 24, `${ALARM.text} ${ALARM.ampm}`, 19, C.secondary, 700);
+  // takeover
+  const rx0 = 480, rcx = 690, rcy = 214, rr = 150, left = 42;
+  add(`<circle cx="${rcx}" cy="${rcy}" r="${rr}" fill="none" stroke="${C.dim}" stroke-width="10"/>`);
+  arc(rcx, rcy, rr, 0, 360 * left / 60, C.accent, 10);
+  text(rcx, rcy - 58, (NIGHT ? 'SLEEP SOUNDS' : 'PASTA'), 22, C.accent, 700, 'middle', 'letter-spacing="2"');
+  text(rcx, rcy + 46, `0:${left}`, 132, C.accent, 800, 'middle');
+  text(rcx, rcy + 92, 'Timer · Clock', 18, C.secondary, 600, 'middle');
+}
+
+S.innerHTML = out;
+</script>
+</body></html>

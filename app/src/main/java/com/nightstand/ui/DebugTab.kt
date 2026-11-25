@@ -40,6 +40,7 @@ import com.nightstand.weather.Weather
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 
+@Suppress("UNUSED_PARAMETER") // same signature as the other tabs
 @Composable
 fun DebugTab(s: SettingsScope) {
     val c = LocalContext.current

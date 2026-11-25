@@ -55,11 +55,4 @@ class TriggerPolicyTest {
         assertFalse(p.onScreenOff()) // power button while showing: don't relaunch
     }
 
-    @Test fun hideWhenUnpluggedOrPickedUp() {
-        val p = ready()
-        p.onLandscape(true); p.onVisible(true)
-        assertFalse(p.shouldHide())
-        p.onCharging(false)
-        assertTrue(p.shouldHide())
-    }
 }

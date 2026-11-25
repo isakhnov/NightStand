@@ -51,10 +51,14 @@ fi
 echo "accepting licenses..."
 yes | "$SDK/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null 2>&1 || true
 
+[[ -f signing/nightstand.keystore || -n "${NIGHTSTAND_KEYSTORE:-}" ]] || {
+  echo "WARNING: signing/nightstand.keystore not found — this APK will NOT install"
+  echo "over the copy already on the phone (different signature). See README."
+}
 echo "building..."
-./gradlew assembleDebug --no-daemon
+./gradlew assembleRelease --no-daemon
 
-APK="app/build/outputs/apk/debug/app-debug.apk"
+APK="app/build/outputs/apk/release/app-release.apk"
 [[ -f "$APK" ]] || { echo "build produced no apk"; exit 1; }
 echo
 echo "built: $APK"
