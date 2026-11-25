@@ -174,7 +174,7 @@ if (FACE === 'analog' && ALT) {
 if (FACE === 'digital' && !ALT) {
   // D1 (recommended): status lines under the date. Alarm: bell + time + "in 10 h 49 m".
   // Timers: outlined chips, soonest first, counting down; paused chip dimmed with pause glyph.
-  const ts = 155, x = 14, base = 196;
+  const ts = Math.min(100 * (915 * .46 - 14) / measure('00:00', 100, 800), 173), x = 14, base = 196;
   text(x - 4, base, NIGHT ? '11:41' : '7:41', ts, C.primary, 800);
   text(x + 4, base + 46, NIGHT ? 'Wed, Nov 25' : 'Wed, Nov 25', 26, C.accent, 700);
   // alarm line
@@ -202,7 +202,7 @@ if (FACE === 'digital' && !ALT) {
 if (FACE === 'digital' && ALT) {
   // D2 (alternative): the clock column stays pure (time + date). Alarm/timers live in a small
   // status pill top-right, and in a timer's last 60 s the right pane becomes a big countdown.
-  const ts = 155, x = 14, base = 251;
+  const ts = Math.min(100 * (915 * .46 - 14) / measure('00:00', 100, 800), 173), x = 14, base = 251;
   text(x - 4, base, NIGHT ? '11:58' : '7:45', ts, C.primary, 800);
   text(x + 4, base + 61, 'Wed, Nov 25', 26, C.accent, 700);
   // top-right status pill
@@ -214,9 +214,9 @@ if (FACE === 'digital' && ALT) {
   const rx0 = 480, rcx = 690, rcy = 214, rr = 150, left = 42;
   add(`<circle cx="${rcx}" cy="${rcy}" r="${rr}" fill="none" stroke="${C.dim}" stroke-width="10"/>`);
   arc(rcx, rcy, rr, 0, 360 * left / 60, C.accent, 10);
-  text(rcx, rcy - 58, (NIGHT ? 'SLEEP SOUNDS' : 'PASTA'), 22, C.accent, 700, 'middle', 'letter-spacing="2"');
-  text(rcx, rcy + 46, `0:${left}`, 132, C.accent, 800, 'middle');
-  text(rcx, rcy + 92, 'Timer · Clock', 18, C.secondary, 600, 'middle');
+  text(rcx, rcy - 62, (NIGHT ? 'SLEEP SOUNDS' : 'PASTA'), 20, C.accent, 700, 'middle', 'letter-spacing="2"');
+  text(rcx, rcy + 38, `0:${left}`, 104, C.accent, 800, 'middle');
+  text(rcx, rcy + 84, 'Timer · Clock', 18, C.secondary, 600, 'middle');
 }
 
 S.innerHTML = out;
