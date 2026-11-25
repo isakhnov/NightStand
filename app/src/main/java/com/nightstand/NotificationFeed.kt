@@ -41,6 +41,10 @@ class NotificationFeed : NotificationListenerService() {
         val ranking = currentRanking
         val tmp = Ranking()
         val pm = packageManager
+        val now = System.currentTimeMillis()
+        val clock = all.filter { it.packageName in com.nightstand.clock.ClockApps.PACKAGES }
+        timers = clock.mapNotNull { com.nightstand.clock.TimerParser.parse(fields(it), now) }
+        clockDump = clock.joinToString("\n\n") { dump(it) }
         snapshot = all.asSequence()
             .filter { it.packageName != packageName }
             .filter { !it.isOngoing && it.notification.flags and Notification.FLAG_GROUP_SUMMARY == 0 }
@@ -79,11 +83,43 @@ class NotificationFeed : NotificationListenerService() {
         StandByState.notifyChanged()
     }
 
+    private fun fields(sbn: StatusBarNotification): com.nightstand.clock.TimerParser.Fields {
+        val n = sbn.notification
+        val x = n.extras
+        return com.nightstand.clock.TimerParser.Fields(
+            pkg = sbn.packageName, ongoing = sbn.isOngoing, whenMs = n.`when`,
+            showChronometer = x.getBoolean(Notification.EXTRA_SHOW_CHRONOMETER),
+            countDown = x.getBoolean(Notification.EXTRA_CHRONOMETER_COUNT_DOWN),
+            title = x.getCharSequence(Notification.EXTRA_TITLE)?.toString(),
+            text = x.getCharSequence(Notification.EXTRA_TEXT)?.toString(),
+            actions = n.actions?.mapNotNull { it.title?.toString() } ?: emptyList(),
+            category = n.category,
+        )
+    }
+
+    /** Debug: everything a clock notification carries, to finalise the parser on-device. */
+    private fun dump(sbn: StatusBarNotification): String {
+        val n = sbn.notification
+        val x = n.extras
+        return buildString {
+            append("pkg=${sbn.packageName} id=${sbn.id} ongoing=${sbn.isOngoing} channel=${n.channelId} ")
+            append("category=${n.category} when=${n.`when`} (now=${System.currentTimeMillis()})\n")
+            append("style=${x.getString(Notification.EXTRA_TEMPLATE)}\n")
+            x.keySet().sorted().forEach { k -> append("  $k = ${runCatching { x.get(k) }.getOrNull()}\n") }
+            n.actions?.forEach { append("  action: ${it.title}\n") }
+        }
+    }
+
     private fun titleOf(n: Notification): String? =
         n.extras.getCharSequence(Notification.EXTRA_TITLE)?.toString()
 
     companion object {
         @Volatile var snapshot: List<NotifSummary> = emptyList()
+            private set
+        @Volatile var timers: List<com.nightstand.clock.RunningTimer> = emptyList()
+            private set
+        /** Debug → "Capture clock notifications". */
+        @Volatile var clockDump: String = ""
             private set
         @Volatile private var instance: NotificationFeed? = null
 

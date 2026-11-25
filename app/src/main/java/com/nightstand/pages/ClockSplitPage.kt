@@ -10,6 +10,7 @@ import com.nightstand.AnalogClock
 import com.nightstand.BurnIn
 import com.nightstand.Fonts
 import com.nightstand.Prefs
+import com.nightstand.clock.ClockOverlay
 import java.util.Calendar
 import java.util.Locale
 
@@ -20,7 +21,7 @@ import java.util.Locale
  */
 abstract class ClockSplitPage(context: Context, data: DisplayData) : Page(context, data) {
     override val needsSeconds get() =
-        Prefs.clockStyle(context) == Prefs.ClockStyle.ANALOG && Prefs.secondHand(context)
+        (Prefs.clockStyle(context) == Prefs.ClockStyle.ANALOG && Prefs.secondHand(context)) || timerTicking
 
     /** Most of the width the clock may take; it is normally height-limited. */
     protected open val maxClockFraction = 0.46f
@@ -46,10 +47,13 @@ abstract class ClockSplitPage(context: Context, data: DisplayData) : Page(contex
         // (user feedback: half the empty space, bigger right pane). The clock
         // is sized by the screen height, capped at [maxClockFraction] of width.
         val clockRight: Float
+        val extras = clockExtras()
 
         if (Prefs.clockStyle(context) == Prefs.ClockStyle.ANALOG) {
             val r = minOf(h / 2 - pad, w * maxClockFraction / 2 - pad)
-            AnalogClock.draw(c, pad + r, h / 2, r, now, p, showSeconds = Prefs.secondHand(context))
+            AnalogClock.draw(c, pad + r, h / 2, r, now, p, showSeconds = Prefs.secondHand(context)) { cv ->
+                ClockOverlay.drawAnalog(context, cv, pad + r, h / 2, r, now, p, extras)
+            }
             clockRight = pad + 2 * r
         } else {
             val is24 = DateFormat.is24HourFormat(context)
@@ -60,18 +64,24 @@ abstract class ClockSplitPage(context: Context, data: DisplayData) : Page(contex
             // Size for the widest time so the pane doesn't jump as digits change.
             digit.textSize = minOf(100f * (w * maxClockFraction - pad) / digit.measureText("00:00"), h * 0.42f)
             val fm = digit.fontMetrics
-            val base = h / 2 - (fm.ascent + fm.descent) / 2 - dp(8f)
+            val statusSize = digit.textSize * 0.15f
+            val extraH = ClockOverlay.digitalHeight(extras, statusSize)
+            val base = h / 2 - (fm.ascent + fm.descent) / 2 - dp(8f) - extraH / 2
             c.drawText(time, pad, base, digit)
             date.color = p.accent; date.textSize = digit.textSize * 0.17f
             date.textAlign = Paint.Align.LEFT
+            val dateY = base + fm.descent + date.textSize * 1.2f
             c.drawText(
                 DateFormat.format(DateFormat.getBestDateTimePattern(Locale.getDefault(), "EEEMMMd"), now).toString(),
-                pad + dp(4f), base + fm.descent + date.textSize * 1.2f, date
+                pad + dp(4f), dateY, date
             )
+            ClockOverlay.drawDigital(context, c, pad + dp(4f), dateY + dp(2f), w * maxClockFraction, statusSize, p, extras)
             clockRight = pad + digit.measureText(if (is24) "00:00" else "00:00".substring(1))
         }
         rightRect.set(clockRight + gap, pad, w - pad, h - pad)
-        drawRight(c, rightRect, now)
+        if (ClockOverlay.bigCountdownActive(context, extras.timer, p.night, extras.now)) {
+            ClockOverlay.drawBigCountdown(c, rightRect, p, extras.timer!!, extras.now)
+        } else drawRight(c, rightRect, now)
         c.restore()
     }
 

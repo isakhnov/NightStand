@@ -13,6 +13,13 @@ class DisplayData {
     var batteryPct = -1
     var charging = true
     var showNotifContent = false
+    var nextAlarm: com.nightstand.clock.NextAlarm? = null
+    var timers: List<com.nightstand.clock.RunningTimer> = emptyList()
+    /** The timer to feature: soonest running, else paused, else ringing. */
+    val mainTimer get() = timers.sortedWith(
+        compareBy({ it.state.ordinal }, { it.endsAt.takeIf { e -> e > 0 } ?: Long.MAX_VALUE })
+    ).firstOrNull()
+    val hasRunningTimer get() = timers.any { it.state != com.nightstand.clock.RunningTimer.State.PAUSED }
 }
 
 /**
@@ -38,6 +45,15 @@ abstract class Page(context: Context, val data: DisplayData) : View(context) {
     open fun onTapAt(x: Float, y: Float): Boolean = false
     /** Data in [data] changed (events, notifications, battery). */
     open fun onDataChanged() = invalidate()
+
+    /** Alarm/timer additions for the clock, honouring the Look settings. */
+    protected fun clockExtras(now: Long = System.currentTimeMillis()): com.nightstand.clock.ClockExtras {
+        val timers = if (com.nightstand.Prefs.showTimers(context)) data.timers else emptyList()
+        return com.nightstand.clock.ClockExtras(data.nextAlarm, timers.let { data.mainTimer?.takeIf { _ -> it.isNotEmpty() } }, timers, now)
+    }
+
+    /** A timer is counting: redraw every second while this page is visible. */
+    protected val timerTicking get() = data.hasRunningTimer && com.nightstand.Prefs.showTimers(context)
 
     protected val density = resources.displayMetrics.density
     protected fun dp(v: Float) = v * density

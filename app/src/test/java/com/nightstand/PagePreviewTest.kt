@@ -41,6 +41,8 @@ class PagePreviewTest {
             )
             notifs = listOf(NotifSummary("com.whatsapp", "WhatsApp", 3, "Alex", "Alex", now))
             batteryPct = 87
+            nextAlarm = com.nightstand.clock.NextAlarm(now + (6 * 60 + 49) * 60_000L, "com.sec.android.app.clockpackage")
+            timers = listOf(com.nightstand.clock.RunningTimer(com.nightstand.clock.RunningTimer.State.RUNNING, endsAt = now + 299_000, label = "Pasta"))
         }
         Weather.current = WeatherNow("Cancún", 77, 61, true, 80, 77, true, now)
         val out = File("build/previews").apply { mkdirs() }

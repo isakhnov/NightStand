@@ -13,6 +13,7 @@ import com.nightstand.AnalogClock
 import com.nightstand.BurnIn
 import com.nightstand.Fonts
 import com.nightstand.Prefs
+import com.nightstand.clock.ClockOverlay
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
@@ -31,7 +32,7 @@ class ClockAgendaPage(context: Context, data: DisplayData) : Page(context, data)
     companion object { const val ID = "clock_agenda" }
     override val pageId = ID
     override val needsSeconds get() =
-        Prefs.clockStyle(context) == Prefs.ClockStyle.ANALOG && Prefs.secondHand(context)
+        (Prefs.clockStyle(context) == Prefs.ClockStyle.ANALOG && Prefs.secondHand(context)) || timerTicking
 
     private val clockPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = Fonts.heavy }
     private val text = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = Fonts.semibold }
@@ -52,18 +53,24 @@ class ClockAgendaPage(context: Context, data: DisplayData) : Page(context, data)
         val split = w * 0.55f
         val bottom = h - notifH - pad * 0.5f
 
+        val extras = clockExtras()
         if (Prefs.clockStyle(context) == Prefs.ClockStyle.ANALOG) {
             val r = minOf(split - pad * 2, bottom - pad) / 2
-            AnalogClock.draw(c, pad + split / 2 - pad / 2, pad / 2 + (bottom) / 2, r, now, p, showSeconds = Prefs.secondHand(context))
+            val cx = pad + split / 2 - pad / 2; val cy = pad / 2 + (bottom) / 2
+            AnalogClock.draw(c, cx, cy, r, now, p, showSeconds = Prefs.secondHand(context)) { cv ->
+                ClockOverlay.drawAnalog(context, cv, cx, cy, r, now, p, extras)
+            }
         } else {
-            drawDigital(c, now, pad, pad, split - pad, bottom)
+            drawDigital(c, now, pad, pad, split - pad, bottom, extras)
         }
-        drawAgenda(c, now, split + dp(12f), pad, w - pad, bottom)
+        if (ClockOverlay.bigCountdownActive(context, extras.timer, p.night, extras.now)) {
+            ClockOverlay.drawBigCountdown(c, android.graphics.RectF(split + dp(12f), pad, w - pad, bottom), p, extras.timer!!, extras.now)
+        } else drawAgenda(c, now, split + dp(12f), pad, w - pad, bottom)
         if (notifH > 0) drawNotifs(c, pad, h - notifH, w - pad, h - dp(10f))
         c.restore()
     }
 
-    private fun drawDigital(c: Canvas, now: Calendar, l: Float, t: Float, r: Float, b: Float) {
+    private fun drawDigital(c: Canvas, now: Calendar, l: Float, t: Float, r: Float, b: Float, extras: com.nightstand.clock.ClockExtras) {
         val is24 = DateFormat.is24HourFormat(context)
         val time = DateFormat.format(if (is24) "HH:mm" else "h:mm", now).toString()
         clockPaint.color = palette.primary
@@ -71,12 +78,15 @@ class ClockAgendaPage(context: Context, data: DisplayData) : Page(context, data)
         clockPaint.textSize = minOf(100f * (r - l) / clockPaint.measureText("00:00"), (b - t) * 0.6f)
         val fm = clockPaint.fontMetrics
         text.textSize = clockPaint.textSize * 0.17f
-        val blockH = (fm.descent - fm.ascent) + text.textSize * 1.6f
+        val statusSize = clockPaint.textSize * 0.14f
+        val extraH = ClockOverlay.digitalHeight(extras, statusSize)
+        val blockH = (fm.descent - fm.ascent) + text.textSize * 1.6f + extraH
         var y = t + ((b - t) - blockH) / 2 - fm.ascent
         c.drawText(time, l, y, clockPaint)
         y += fm.descent + text.textSize * 1.2f
         text.color = palette.accent
         c.drawText(dateLine(now), l + dp(4f), y, text)
+        ClockOverlay.drawDigital(context, c, l + dp(4f), y + dp(2f), r - l, statusSize, palette, extras)
     }
 
     private fun dateLine(now: Calendar) = DateFormat.format(

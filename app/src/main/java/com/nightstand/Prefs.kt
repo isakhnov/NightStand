@@ -96,4 +96,22 @@ object Prefs {
     // --- Setup ------------------------------------------------------------------
     fun showDebug(c: Context) = sp(c).getBoolean("showDebug", false)
     fun setShowDebug(c: Context, v: Boolean) = sp(c).edit().putBoolean("showDebug", v).apply()
+
+    // --- Alarms & timers (Look tab) ---------------------------------------------
+    fun showAlarm(c: Context) = sp(c).getBoolean("showAlarm", true)
+    fun setShowAlarm(c: Context, v: Boolean) = sp(c).edit().putBoolean("showAlarm", v).apply()
+    fun showTimers(c: Context) = sp(c).getBoolean("showTimers", true)
+    fun setShowTimers(c: Context, v: Boolean) = sp(c).edit().putBoolean("showTimers", v).apply()
+    /** Big countdown replaces the right-hand view in a timer's last minute. */
+    fun bigCountdownDay(c: Context) = sp(c).getBoolean("bigCountdownDay", true)
+    fun setBigCountdownDay(c: Context, v: Boolean) = sp(c).edit().putBoolean("bigCountdownDay", v).apply()
+    fun bigCountdownNight(c: Context) = sp(c).getBoolean("bigCountdownNight", false)
+    fun setBigCountdownNight(c: Context, v: Boolean) = sp(c).edit().putBoolean("bigCountdownNight", v).apply()
+
+    /**
+     * UNDER DEVELOPMENT — placeholder only. Would allow the "next alarm" to
+     * come from non-clock apps (Calendar, Routines, Tasker). Shown disabled in
+     * Look; Alarms.next() ignores it and always uses clock apps only.
+     */
+    fun alarmsFromOtherApps(c: Context) = sp(c).getBoolean("alarmsFromOtherApps", false)
 }

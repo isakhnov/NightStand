@@ -89,8 +89,18 @@ fun DebugTab(s: SettingsScope) {
                     StandByState.forceNight = force
                 }) { Text("Night: " + when (force) { null -> "auto"; true -> "on"; false -> "off" }) }
             }
-            OutlinedButton({ Weather.invalidate(); Weather.refreshIfStale(c) {} }, Modifier.padding(top = 4.dp)) {
-                Text("Refresh weather")
+            Row(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton({ Weather.invalidate(); Weather.refreshIfStale(c) {} }) { Text("Refresh weather") }
+                // Start a timer in the Clock app first; the dump finalises the timer parser.
+                OutlinedButton({
+                    val alarm = (c.getSystemService(android.app.AlarmManager::class.java)).nextAlarmClock
+                    WatcherService.log("next alarm raw: " + (alarm?.let {
+                        "${java.util.Date(it.triggerTime)} from ${it.showIntent?.creatorPackage}"
+                    } ?: "none"))
+                    val dump = com.nightstand.NotificationFeed.clockDump
+                    WatcherService.log("clock notifications:\n" + dump.ifEmpty { "(none — is a timer running? is Notification access on?)" })
+                    WatcherService.log("parsed timers: " + com.nightstand.NotificationFeed.timers)
+                }) { Text("Capture clock notifications") }
             }
 
             Row(Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 8.dp, start = 8.dp)) {

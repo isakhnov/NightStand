@@ -19,7 +19,11 @@ object AnalogClock {
         typeface = Fonts.bold; textAlign = Paint.Align.CENTER
     }
 
-    fun draw(c: Canvas, cx: Float, cy: Float, r: Float, t: Calendar, p: Palette, showSeconds: Boolean) {
+    /** [overlay] draws between the dial and the hands (alarm/timer additions). */
+    fun draw(
+        c: Canvas, cx: Float, cy: Float, r: Float, t: Calendar, p: Palette, showSeconds: Boolean,
+        overlay: ((Canvas) -> Unit)? = null,
+    ) {
         // Ticks
         for (i in 0 until 60) {
             val hour = i % 5 == 0
@@ -43,6 +47,8 @@ object AnalogClock {
             val a = Math.toRadians(h * 30.0)
             c.drawText(h.toString(), cx + (sin(a) * nr).toFloat(), cy - (cos(a) * nr).toFloat() + baseline, num)
         }
+
+        overlay?.invoke(c)
 
         val sec = t.get(Calendar.SECOND)
         val min = t.get(Calendar.MINUTE) + sec / 60f

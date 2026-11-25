@@ -9,6 +9,7 @@ import com.nightstand.AnalogClock
 import com.nightstand.BurnIn
 import com.nightstand.Fonts
 import com.nightstand.Prefs
+import com.nightstand.clock.ClockOverlay
 import java.util.Calendar
 import java.util.Locale
 
@@ -17,7 +18,7 @@ class BigClockPage(context: Context, data: DisplayData) : Page(context, data) {
     companion object { const val ID = "big_clock" }
     override val pageId = ID
     override val needsSeconds get() =
-        Prefs.clockStyle(context) == Prefs.ClockStyle.ANALOG && Prefs.secondHand(context)
+        (Prefs.clockStyle(context) == Prefs.ClockStyle.ANALOG && Prefs.secondHand(context)) || timerTicking
 
     private val big = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = Fonts.heavy; textAlign = Paint.Align.CENTER }
     private val small = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = Fonts.bold }
@@ -33,9 +34,12 @@ class BigClockPage(context: Context, data: DisplayData) : Page(context, data) {
             DateFormat.getBestDateTimePattern(Locale.getDefault(), "EEEMMMd"), now
         ).toString().uppercase()
 
+        val extras = clockExtras()
         if (Prefs.clockStyle(context) == Prefs.ClockStyle.ANALOG) {
             val r = h / 2 - dp(18f)
-            AnalogClock.draw(c, w / 2, h / 2, r, now, p, showSeconds = Prefs.secondHand(context))
+            AnalogClock.draw(c, w / 2, h / 2, r, now, p, showSeconds = Prefs.secondHand(context)) { cv ->
+                ClockOverlay.drawAnalog(context, cv, w / 2, h / 2, r, now, p, extras)
+            }
             small.textSize = dp(15f); small.color = p.accent
             small.textAlign = Paint.Align.LEFT
             c.drawText(date, dp(24f), h - dp(24f), small)
@@ -49,6 +53,13 @@ class BigClockPage(context: Context, data: DisplayData) : Page(context, data) {
             c.drawText(time, w / 2, h / 2 - (fm.ascent + fm.descent) / 2 - dp(10f), big)
             small.textSize = dp(18f); small.color = p.accent; small.textAlign = Paint.Align.CENTER
             c.drawText(date, w / 2, h - dp(20f), small)
+            // Alarm/timers: one row at the top, centred.
+            if (!extras.isEmpty) {
+                val size = dp(16f)
+                val bw = minOf(w * 0.6f, dp(360f))
+                ClockOverlay.drawDigital(context, c, (w - bw) / 2, dp(2f), bw, size, p,
+                    extras.copy(timers = extras.timers.take(1)))
+            }
         }
         c.restore()
     }

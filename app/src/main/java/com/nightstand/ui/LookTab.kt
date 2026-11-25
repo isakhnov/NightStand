@@ -124,6 +124,31 @@ fun LookTab(s: SettingsScope) {
                     dark = Prefs.Darkness.values()[i]; Prefs.setDarkness(c, dark)
                 })
             }
+            SectionLabel("Alarms & timers")
+            SettingsCard {
+                var alarm by remember { mutableStateOf(Prefs.showAlarm(c)) }
+                var timers by remember { mutableStateOf(Prefs.showTimers(c)) }
+                var bigDay by remember { mutableStateOf(Prefs.bigCountdownDay(c)) }
+                var bigNight by remember { mutableStateOf(Prefs.bigCountdownNight(c)) }
+                SettingRow("Next alarm", "Clock app alarms ringing within 24 h") {
+                    Switch(alarm, { alarm = it; Prefs.setShowAlarm(c, it); version++ })
+                }
+                SettingRow("Running timers", "From the clock app's timer notification") {
+                    Switch(timers, { timers = it; Prefs.setShowTimers(c, it); version++ })
+                }
+                SettingRow("Big countdown, last minute · day", "Replaces the right-hand view") {
+                    Switch(bigDay, { bigDay = it; Prefs.setBigCountdownDay(c, it) }, enabled = timers)
+                }
+                SettingRow("Big countdown, last minute · night", null) {
+                    Switch(bigNight, { bigNight = it; Prefs.setBigCountdownNight(c, it) }, enabled = timers)
+                }
+                // UNDER DEVELOPMENT placeholder: visible, disabled, not wired (see Alarms.next()).
+                SettingRow("Alarms from other apps", "Calendar, Routines, Tasker…") {
+                    Text("Under development", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Muted,
+                        modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(Surface2).padding(horizontal = 8.dp, vertical = 3.dp))
+                    Switch(false, {}, enabled = false)
+                }
+            }
             Spacer(Modifier.height(20.dp))
         }
     }

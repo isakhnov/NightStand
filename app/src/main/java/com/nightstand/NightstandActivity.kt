@@ -51,6 +51,7 @@ class NightstandActivity : Activity(), SensorEventListener {
         override fun onReceive(c: Context, i: Intent) {
             when (i.action) {
                 Intent.ACTION_BATTERY_CHANGED -> updateBattery(i)
+                android.app.AlarmManager.ACTION_NEXT_ALARM_CLOCK_CHANGED -> refreshAlarm()
                 else -> onMinute() // TIME_TICK / TIME_SET / TIMEZONE_CHANGED
             }
         }
@@ -119,6 +120,7 @@ class NightstandActivity : Activity(), SensorEventListener {
             addAction(Intent.ACTION_TIME_CHANGED)
             addAction(Intent.ACTION_TIMEZONE_CHANGED)
             addAction(Intent.ACTION_BATTERY_CHANGED)
+            addAction(android.app.AlarmManager.ACTION_NEXT_ALARM_CLOCK_CHANGED)
         }, if (Build.VERSION.SDK_INT >= 33) RECEIVER_NOT_EXPORTED else 0)
         if (CalendarSource.isGranted(this)) {
             contentResolver.registerContentObserver(CalendarContract.CONTENT_URI, true, calendarObserver)
@@ -127,7 +129,7 @@ class NightstandActivity : Activity(), SensorEventListener {
         Prefs.darkness(this).let { nightCtl.enterLux = it.enterLux; nightCtl.exitLux = it.exitLux }
         lightSensor?.let { sensors.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL) }
         data.showNotifContent = Prefs.showContent(this)
-        refreshEvents(); refreshNotifs()
+        refreshEvents(); refreshNotifs(); refreshAlarm()
         applyBrightness()
         container.current?.onShown()
         restartSecondTick()
@@ -167,6 +169,7 @@ class NightstandActivity : Activity(), SensorEventListener {
 
     private fun onMinute() {
         refreshEvents()
+        refreshAlarm()
         if (lightSensor == null &&
             nightCtl.set(NightModeController.nightBySchedule(Calendar.getInstance().get(Calendar.HOUR_OF_DAY)))
         ) applyBrightness()
@@ -179,7 +182,14 @@ class NightstandActivity : Activity(), SensorEventListener {
     }
 
     private fun refreshEvents() { data.events = CalendarSource.upcoming(this); container.refreshAll() }
-    private fun refreshNotifs() { data.notifs = NotificationFeed.snapshot; container.refreshAll() }
+    private fun refreshNotifs() {
+        data.notifs = NotificationFeed.snapshot
+        data.timers = NotificationFeed.timers
+        container.refreshAll()
+        restartSecondTick() // a timer may have started: count down every second
+    }
+
+    private fun refreshAlarm() { data.nextAlarm = com.nightstand.clock.Alarms.next(this); container.refreshAll() }
 
     private fun updateBattery(i: Intent) {
         val level = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
