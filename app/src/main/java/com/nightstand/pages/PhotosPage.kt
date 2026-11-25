@@ -49,11 +49,11 @@ class PhotosPage(context: Context, data: DisplayData) : ClockSplitPage(context, 
     private val msg = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = Fonts.bold }
     private val clip = Path()
 
-    /** Luminance → night red (#FF3B1F ratios), so photos stay recognisable but monochrome. */
+    /** Luminance → night red (pure red), so photos stay recognisable but monochrome. */
     private val nightFilter = ColorMatrixColorFilter(ColorMatrix(floatArrayOf(
         0.299f, 0.587f, 0.114f, 0f, 0f,
-        0.069f, 0.135f, 0.026f, 0f, 0f,
-        0.036f, 0.071f, 0.014f, 0f, 0f,
+        0f, 0f, 0f, 0f, 0f,
+        0f, 0f, 0f, 0f, 0f,
         0f, 0f, 0f, 0.8f, 0f,
     )))
 

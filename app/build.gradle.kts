@@ -16,8 +16,8 @@ android {
         // foreground service started from BOOT_COMPLETED, full-screen intent,
         // overlay-permission background launch — is allowed at 35.
         targetSdk = 35
-        versionCode = 3
-        versionName = "0.3-views"
+        versionCode = 4
+        versionName = "0.4"
     }
 
     buildTypes {

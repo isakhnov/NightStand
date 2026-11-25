@@ -8,6 +8,7 @@ import android.graphics.Typeface
  * showed a dim maroon (#B3241B at 1% brightness) reads as muddy and too dark
  * next to an iPhone, whose night red is close to #FF3B1F, so the hue stays
  * bright and only window brightness (Prefs.nightBrightness) dims it.
+ * Second device test: #FF3B1F was too orange → pure red.
  */
 data class Palette(val night: Boolean) {
     val background = 0xFF000000.toInt()
@@ -18,9 +19,14 @@ data class Palette(val night: Boolean) {
     val second = if (night) RED else 0xFFFF9F0A.toInt()
 
     companion object {
-        const val RED = 0xFFFF3B1F.toInt()
+        /**
+         * Pure red. Apple publishes no value; StandBy's night filter appears to
+         * keep only the red channel. 0.2 used #FF3B1F, which read as orange
+         * next to the iPhone (phone cameras exaggerate this, so judge by eye).
+         */
+        const val RED = 0xFFFF0000.toInt()
         /** Same hue, lower alpha: hierarchy without introducing a second colour. */
-        const val RED_SOFT = 0xA6FF3B1F.toInt()
+        const val RED_SOFT = 0xA6FF0000.toInt()
         val DAY = Palette(false)
         val NIGHT = Palette(true)
     }

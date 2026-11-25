@@ -39,40 +39,65 @@ class WeatherPage(context: Context, data: DisplayData) : ClockSplitPage(context,
     override fun drawRight(c: Canvas, r: RectF, now: Calendar) {
         val p = palette
         val w = Weather.current
-        val x = r.left + dp(12f)
         val h = r.height()
         place.color = p.accent; temp.color = p.primary; label.color = p.primary
 
         if (w == null) {
             label.textSize = dp(20f)
             val msg = if (Weather.hasLocationPermission(context)) "Getting weather…" else "Allow location in Nightstand setup"
-            c.drawText(msg, x, r.centerY(), label)
+            c.drawText(msg, r.left + dp(12f), r.centerY(), label)
             return
         }
 
+        // Sizes first, then centre the whole block in the pane as one
+        // left-aligned group (iOS widget style), horizontally and vertically.
         place.textSize = h * 0.085f
-        var y = r.top + h * 0.17f
-        val name = TextUtils.ellipsize(w.place ?: "Current location", place, r.width() * 0.75f, TextUtils.TruncateAt.END)
-        c.drawText(name, 0, name.length, x, y, place)
-        // Location arrow (iOS style), only for GPS-derived places — which is always, by design.
-        val ax = x + place.measureText(name, 0, name.length) + place.textSize * 0.35f
+        temp.textSize = h * 0.42f
+        label.textSize = h * 0.085f
+        val icon = h * 0.1f
+        val nameStr = w.place ?: "Current location"
         val asz = place.textSize * 0.62f
+        val tempStr = "${w.temp}°"
+        val condStr = WeatherCodes.label(w.code)
+        val hlStr = "H:${w.high}° L:${w.low}°"
+        val maxW = r.width() - dp(16f)
+        val name = TextUtils.ellipsize(nameStr, place, maxW - place.textSize, TextUtils.TruncateAt.END)
+        val placeW = place.measureText(name, 0, name.length) + place.textSize * 0.35f + asz
+        val tempW = temp.measureText(tempStr)
+        val condW = icon * 1.35f + label.measureText(condStr)
+        val hlW = label.measureText(hlStr)
+        val blockW = minOf(maxW, maxOf(placeW, tempW, condW, hlW))
+
+        val pfm = place.fontMetrics; val lfm = label.fontMetrics
+        val placeH = -pfm.ascent
+        // Big numerals: use their real ink height (no descender) so spacing looks even.
+        val tb = android.graphics.Rect(); temp.getTextBounds(tempStr, 0, tempStr.length, tb)
+        val tempTop = -tb.top.toFloat()
+        val gap1 = h * 0.08f; val gap2 = h * 0.07f; val gap3 = h * 0.04f
+        val condH = maxOf(icon, -lfm.ascent)
+        val hlH = -lfm.ascent
+        val blockH = placeH + gap1 + tempTop + gap2 + condH + gap3 + hlH
+
+        val x = r.centerX() - blockW / 2
+        var y = r.centerY() - blockH / 2
+
+        y += placeH
+        c.drawText(name, 0, name.length, x, y, place)
+        val ax = x + place.measureText(name, 0, name.length) + place.textSize * 0.35f
         arrow.color = p.accent
         c.drawPath(Path().apply {
             moveTo(ax + asz, y - asz); lineTo(ax, y - asz * 0.45f)
             lineTo(ax + asz * 0.45f, y - asz * 0.4f); lineTo(ax + asz * 0.55f, y); close()
         }, arrow)
 
-        temp.textSize = h * 0.42f
-        y += temp.textSize * 0.95f
-        c.drawText("${w.temp}°", x - temp.textSize * 0.04f, y, temp)
+        y += gap1 + tempTop
+        // Big glyphs carry left side-bearing; nudge so the "7" lines up with the text above.
+        c.drawText(tempStr, x - temp.textSize * 0.04f, y, temp)
 
-        val icon = h * 0.1f
-        y += h * 0.1f
-        WeatherIcons.draw(c, WeatherCodes.icon(w.code), w.isDay, x, y - icon * 0.1f, icon, p.primary)
-        label.textSize = h * 0.085f
-        c.drawText(WeatherCodes.label(w.code), x + icon * 1.35f, y + icon * 0.72f, label)
-        y += icon + h * 0.11f
-        c.drawText("H:${w.high}° L:${w.low}°", x, y, label)
+        y += gap2
+        WeatherIcons.draw(c, WeatherCodes.icon(w.code), w.isDay, x, y + (condH - icon) / 2, icon, p.primary)
+        c.drawText(condStr, x + icon * 1.35f, y + condH / 2 + (-lfm.ascent) * 0.36f, label)
+        y += condH + gap3 + hlH
+        c.drawText(hlStr, x, y, label)
     }
 }
