@@ -50,6 +50,28 @@ object Alarms {
         return filter(NextAlarm(info.triggerTime, info.showIntent?.creatorPackage), now)
     }
 
+    /**
+     * What Android reports, and why it is or isn't shown — for Look and Debug,
+     * so "my alarm doesn't appear" can be answered on the phone.
+     */
+    fun explain(c: Context, now: Long = System.currentTimeMillis()): String {
+        val info = c.getSystemService(AlarmManager::class.java).nextAlarmClock
+            ?: return "Android reports no upcoming alarm"
+        val pkg = info.showIntent?.creatorPackage
+        val app = pkg?.let { p ->
+            runCatching { c.packageManager.getApplicationLabel(c.packageManager.getApplicationInfo(p, 0)).toString() }.getOrNull() ?: p
+        } ?: "unknown app"
+        val time = android.text.format.DateFormat.format(
+            if (android.text.format.DateFormat.is24HourFormat(c)) "EEE HH:mm" else "EEE h:mm a", info.triggerTime)
+        val why = when {
+            pkg !in ClockApps.PACKAGES -> "hidden: not a clock app ($pkg)"
+            info.triggerTime - now > WINDOW_MS -> "hidden: more than 24 h away"
+            !Prefs.showAlarm(c) -> "hidden: Next alarm is off"
+            else -> "shown"
+        }
+        return "$time from $app · $why"
+    }
+
     /** Pure rule, unit-tested. */
     fun filter(a: NextAlarm?, now: Long): NextAlarm? {
         if (a == null) return null

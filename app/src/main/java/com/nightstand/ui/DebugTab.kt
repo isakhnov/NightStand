@@ -80,6 +80,10 @@ fun DebugTab(s: SettingsScope) {
                 }
             }
             Text("Posture is only measured while plugged in.", fontSize = 12.sp, color = Muted)
+            Column(Modifier.fillMaxWidth().padding(top = 8.dp).clip(RoundedCornerShape(14.dp)).background(Surface2).padding(12.dp)) {
+                Text("NEXT ALARM (ANDROID)", fontSize = 11.sp, color = Muted, fontWeight = FontWeight.Bold)
+                Text(com.nightstand.clock.Alarms.explain(c), fontSize = 15.sp, fontWeight = FontWeight.Bold)
+            }
 
             SectionLabel("Test")
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

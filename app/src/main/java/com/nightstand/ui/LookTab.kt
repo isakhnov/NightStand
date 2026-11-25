@@ -130,7 +130,8 @@ fun LookTab(s: SettingsScope) {
                 var timers by remember { mutableStateOf(Prefs.showTimers(c)) }
                 var bigDay by remember { mutableStateOf(Prefs.bigCountdownDay(c)) }
                 var bigNight by remember { mutableStateOf(Prefs.bigCountdownNight(c)) }
-                SettingRow("Next alarm", "Clock app alarms ringing within 24 h") {
+                val detected = remember(s.tick, alarm) { com.nightstand.clock.Alarms.explain(c) }
+                SettingRow("Next alarm", "Clock app alarms ringing within 24 h\nNow: $detected") {
                     Switch(alarm, { alarm = it; Prefs.setShowAlarm(c, it); version++ })
                 }
                 SettingRow("Running timers", "From the clock app's timer notification") {
