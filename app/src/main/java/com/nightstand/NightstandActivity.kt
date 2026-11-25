@@ -72,6 +72,7 @@ class NightstandActivity : Activity(), SensorEventListener {
     }
 
     private val onFeedChanged: () -> Unit = { refreshNotifs() }
+    private val onAlarmChanged: () -> Unit = { refreshAlarm() }
     private val hide: () -> Unit = { if (!isFinishing) finish() }
     private val endBoost = Runnable { boosted = false; applyBrightness() }
 
@@ -126,6 +127,7 @@ class NightstandActivity : Activity(), SensorEventListener {
             contentResolver.registerContentObserver(CalendarContract.CONTENT_URI, true, calendarObserver)
         }
         StandByState.changeListeners += onFeedChanged
+        StandByState.alarmListeners += onAlarmChanged
         Prefs.darkness(this).let { nightCtl.enterLux = it.enterLux; nightCtl.exitLux = it.exitLux }
         lightSensor?.let { sensors.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL) }
         data.showNotifContent = Prefs.showContent(this)
@@ -139,6 +141,7 @@ class NightstandActivity : Activity(), SensorEventListener {
         unregisterReceiver(tick)
         contentResolver.unregisterContentObserver(calendarObserver)
         StandByState.changeListeners -= onFeedChanged
+        StandByState.alarmListeners -= onAlarmChanged
         sensors.unregisterListener(this)
         main.removeCallbacks(secondTick)
         container.current?.onHidden()

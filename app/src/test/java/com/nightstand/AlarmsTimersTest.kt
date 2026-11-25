@@ -90,3 +90,23 @@ class AlarmNotificationParserTest {
         org.junit.Assert.assertNull(com.nightstand.clock.AlarmNotificationParser.parse("com.whatsapp", "Alarm", "7:00 AM", now, false))
     }
 }
+
+class AlarmChooseTest {
+    private val now = 1_000_000_000L
+    private val google = "com.google.android.deskclock"
+    private val bedtime = com.nightstand.clock.NextAlarm(now + 4 * 3_600_000, null)          // 9:30 PM, no owner
+    private val real = com.nightstand.clock.NextAlarm(now + 14 * 3_600_000, google)          // 7:30 AM
+
+    @org.junit.Test fun internalHolderFilteredAndRememberedUsed() {
+        org.junit.Assert.assertEquals(real, com.nightstand.clock.Alarms.choose(bedtime, real, now))
+    }
+
+    @org.junit.Test fun realSystemAlarmWins() {
+        val soon = com.nightstand.clock.NextAlarm(now + 3_600_000, google)
+        org.junit.Assert.assertEquals(soon, com.nightstand.clock.Alarms.choose(soon, real, now))
+    }
+
+    @org.junit.Test fun nothingWhenOnlyInternal() {
+        org.junit.Assert.assertNull(com.nightstand.clock.Alarms.choose(bedtime, null, now))
+    }
+}

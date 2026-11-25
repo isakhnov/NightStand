@@ -33,6 +33,10 @@ object StandByState {
     fun requestHide() = hideRequest?.invoke()
     fun notifyChanged() = main.post { changeListeners.toList().forEach { it() } }
 
+    /** Next alarm may have changed (recheck fired, clock notification seen). */
+    val alarmListeners = mutableSetOf<() -> Unit>()
+    fun notifyAlarmChanged() = main.post { alarmListeners.toList().forEach { it() } }
+
     // Small ring buffer shown on the setup screen — the prototype's debug log.
     private val log = ArrayDeque<String>()
     private val fmt = SimpleDateFormat("HH:mm:ss", Locale.US)

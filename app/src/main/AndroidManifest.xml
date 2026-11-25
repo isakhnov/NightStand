@@ -71,6 +71,11 @@
             </intent-filter>
         </service>
 
+        <!-- Re-reads the next alarm after an internal one (Bedtime) passes. -->
+        <receiver
+            android:name=".clock.AlarmRecheckReceiver"
+            android:exported="false" />
+
         <receiver
             android:name=".BootReceiver"
             android:exported="true">

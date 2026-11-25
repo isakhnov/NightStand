@@ -54,6 +54,10 @@ class WatcherService : Service(), SensorEventListener {
                 Intent.ACTION_POWER_DISCONNECTED -> setCharging(false)
                 Intent.ACTION_SCREEN_OFF -> { log("screen off"); maybeLaunch(policy.onScreenOff()) }
                 Intent.ACTION_SCREEN_ON, Intent.ACTION_USER_PRESENT -> refreshLocked()
+                android.app.AlarmManager.ACTION_NEXT_ALARM_CLOCK_CHANGED -> {
+                    com.nightstand.clock.AlarmRecheck.schedule(c)
+                    StandByState.notifyAlarmChanged()
+                }
             }
         }
     }
@@ -72,6 +76,7 @@ class WatcherService : Service(), SensorEventListener {
             addAction(Intent.ACTION_SCREEN_OFF)
             addAction(Intent.ACTION_SCREEN_ON)
             addAction(Intent.ACTION_USER_PRESENT)
+            addAction(android.app.AlarmManager.ACTION_NEXT_ALARM_CLOCK_CHANGED)
         }, if (Build.VERSION.SDK_INT >= 33) RECEIVER_NOT_EXPORTED else 0)
         StandByState.listener = { visible ->
             policy.onVisible(visible)
@@ -80,6 +85,7 @@ class WatcherService : Service(), SensorEventListener {
         setCharging(isPluggedIn())
         refreshLocked()
         StandByState.watcherStartedAt = System.currentTimeMillis()
+        com.nightstand.clock.AlarmRecheck.schedule(this)
         log("watcher started; charging=${policy.charging}")
     }
 

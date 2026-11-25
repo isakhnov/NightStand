@@ -36,6 +36,20 @@ class NotificationFeed : NotificationListenerService() {
     override fun onNotificationPosted(sbn: StatusBarNotification) = rebuild()
     override fun onNotificationRemoved(sbn: StatusBarNotification) = rebuild()
 
+    override fun onNotificationRemoved(sbn: StatusBarNotification, rankingMap: RankingMap?, reason: Int) {
+        // The clock app withdrawing its own alarm notification means the alarm
+        // was dismissed early or has rung; the user swiping it away means nothing.
+        if (sbn.packageName in com.nightstand.clock.ClockApps.PACKAGES &&
+            (reason == REASON_APP_CANCEL || reason == REASON_APP_CANCEL_ALL)
+        ) {
+            val f = fields(sbn)
+            val a = com.nightstand.clock.AlarmNotificationParser.parse(
+                f.pkg, f.title, f.text, System.currentTimeMillis(), android.text.format.DateFormat.is24HourFormat(this))
+            if (a != null) com.nightstand.clock.AlarmMemory.forget(this, "clock app withdrew its alarm notification")
+        }
+        rebuild()
+    }
+
     private fun rebuild() {
         val all = try { activeNotifications ?: emptyArray() } catch (_: Throwable) { emptyArray() }
         val ranking = currentRanking
@@ -44,11 +58,17 @@ class NotificationFeed : NotificationListenerService() {
         val now = System.currentTimeMillis()
         val clock = all.filter { it.packageName in com.nightstand.clock.ClockApps.PACKAGES }
         timers = clock.mapNotNull { com.nightstand.clock.TimerParser.parse(fields(it), now) }
+        timerReport = if (clock.isEmpty()) emptyList()
+            else clock.map { com.nightstand.clock.TimerParser.explain(fields(it), now) }
         val is24 = android.text.format.DateFormat.is24HourFormat(this)
         notifiedAlarm = clock.mapNotNull {
             val f = fields(it)
             com.nightstand.clock.AlarmNotificationParser.parse(f.pkg, f.title, f.text, now, is24)
         }.minByOrNull { it.triggerAt }
+        notifiedAlarm?.let {
+            com.nightstand.clock.AlarmMemory.remember(this, it)
+            StandByState.notifyAlarmChanged()
+        }
         clockDump = clock.joinToString("\n\n") { dump(it) }
         snapshot = all.asSequence()
             .filter { it.packageName != packageName }
@@ -125,6 +145,9 @@ class NotificationFeed : NotificationListenerService() {
             private set
         /** Alarm time from a clock app's own "Upcoming alarm"/"Snoozed" notification. */
         @Volatile var notifiedAlarm: com.nightstand.clock.NextAlarm? = null
+            private set
+        /** One line per clock-app notification: what was read from it, or why not. */
+        @Volatile var timerReport: List<String> = emptyList()
             private set
         /** Debug → "Capture clock notifications". */
         @Volatile var clockDump: String = ""

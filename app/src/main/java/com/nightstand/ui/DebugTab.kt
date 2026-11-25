@@ -83,6 +83,17 @@ fun DebugTab(s: SettingsScope) {
             Column(Modifier.fillMaxWidth().padding(top = 8.dp).clip(RoundedCornerShape(14.dp)).background(Surface2).padding(12.dp)) {
                 Text("NEXT ALARM (ANDROID)", fontSize = 11.sp, color = Muted, fontWeight = FontWeight.Bold)
                 Text(com.nightstand.clock.Alarms.explain(c), fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                Text("REMEMBERED FROM NOTIFICATION", fontSize = 11.sp, color = Muted, fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 8.dp))
+                Text(com.nightstand.clock.AlarmMemory.get(c)?.let { java.util.Date(it.triggerAt).toString() + " (" + it.sourcePkg + ")" } ?: "none",
+                    fontSize = 13.sp)
+                Text("TIMERS (CLOCK NOTIFICATIONS)", fontSize = 11.sp, color = Muted, fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 8.dp))
+                Text(when {
+                    !com.nightstand.NotificationFeed.isGranted(c) -> "Notification access is off"
+                    com.nightstand.NotificationFeed.timerReport.isEmpty() -> "No clock-app notification is showing"
+                    else -> com.nightstand.NotificationFeed.timerReport.joinToString("\n\n")
+                }, fontSize = 13.sp)
             }
 
             SectionLabel("Test")

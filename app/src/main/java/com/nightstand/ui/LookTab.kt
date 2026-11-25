@@ -134,7 +134,14 @@ fun LookTab(s: SettingsScope) {
                 SettingRow("Next alarm", "Clock app alarms ringing within 24 h\nNow: $detected") {
                     Switch(alarm, { alarm = it; Prefs.setShowAlarm(c, it); version++ })
                 }
-                SettingRow("Running timers", "From the clock app's timer notification") {
+                val timerNow = remember(s.tick, timers) {
+                    when {
+                        !com.nightstand.NotificationFeed.isGranted(c) -> "Notification access is off (Setup)"
+                        com.nightstand.NotificationFeed.timerReport.isEmpty() -> "no clock-app notification right now"
+                        else -> com.nightstand.NotificationFeed.timerReport.joinToString("\n")
+                    }
+                }
+                SettingRow("Running timers", "From the clock app's timer notification\nNow: $timerNow") {
                     Switch(timers, { timers = it; Prefs.setShowTimers(c, it); version++ })
                 }
                 SettingRow("Big countdown, last minute · day", "Replaces the right-hand view") {

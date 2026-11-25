@@ -47,12 +47,24 @@ object Alarms {
     fun next(c: Context, now: Long = System.currentTimeMillis()): NextAlarm? {
         if (!Prefs.showAlarm(c)) return null
         val info = c.getSystemService(AlarmManager::class.java).nextAlarmClock
-        val fromSystem = info?.let { filter(NextAlarm(it.triggerTime, it.showIntent?.creatorPackage), now) }
-        // Android exposes only ONE next alarm. If something else holds that slot
-        // (seen on the S26: a 9:30 PM entry with no owner — likely a bedtime
-        // schedule), fall back to the clock app's "Upcoming alarm"/"Snoozed"
-        // notification, which carries the real alarm time.
-        return fromSystem ?: com.nightstand.NotificationFeed.notifiedAlarm?.let { filter(it, now) }
+        val system = info?.let { NextAlarm(it.triggerTime, it.showIntent?.creatorPackage) }
+        return choose(system, AlarmMemory.get(c, now), now)
+    }
+
+    /**
+     * Android exposes only ONE next alarm. Internal holders (seen on the S26:
+     * the 9:30 PM Bedtime action, no owner) are filtered out; then the alarm
+     * remembered from the clock app's own "Upcoming alarm" notification is
+     * used. A real clock alarm reported by Android always wins. Pure; tested.
+     */
+    fun choose(system: NextAlarm?, remembered: NextAlarm?, now: Long): NextAlarm? =
+        filter(system, now) ?: filter(remembered, now)
+
+    /** The slot holder if it's an internal alarm we hide (bedtime etc.), else null. */
+    fun internalHolder(c: Context, now: Long = System.currentTimeMillis()): NextAlarm? {
+        val info = c.getSystemService(AlarmManager::class.java).nextAlarmClock ?: return null
+        val a = NextAlarm(info.triggerTime, info.showIntent?.creatorPackage)
+        return if (a.sourcePkg !in ClockApps.PACKAGES && a.triggerAt > now) a else null
     }
 
     /**
@@ -68,9 +80,10 @@ object Alarms {
         } ?: "unknown app"
         val time = android.text.format.DateFormat.format(
             if (android.text.format.DateFormat.is24HourFormat(c)) "EEE HH:mm" else "EEE h:mm a", info.triggerTime)
-        val fallback = com.nightstand.NotificationFeed.notifiedAlarm?.let { filter(it, now) }
+        val fallback = filter(AlarmMemory.get(c, now), now)
         val why = when {
-            pkg == null && fallback != null -> "owner unknown; using clock notification instead"
+            pkg !in ClockApps.PACKAGES && fallback != null ->
+                "internal alarm (${pkg ?: "no owner"}) hidden; showing ${alarmLabel(c, fallback)} from the clock's notification"
             pkg == null -> "hidden: set by an app that doesn't identify itself (often a Bedtime/Sleep " +
                 "schedule). It holds Android's single next-alarm slot, so your clock alarm appears once it has passed"
             pkg !in ClockApps.PACKAGES -> "hidden: not a clock app ($pkg)"
@@ -88,6 +101,68 @@ object Alarms {
         if (a.triggerAt < now || a.triggerAt - now > WINDOW_MS) return null
         return a
     }
+
+    private fun alarmLabel(c: Context, a: NextAlarm) = android.text.format.DateFormat.format(
+        if (android.text.format.DateFormat.is24HourFormat(c)) "EEE HH:mm" else "EEE h:mm a", a.triggerAt).toString()
+}
+
+/**
+ * Alarm learned from a clock app's "Upcoming alarm" / "Snoozing until"
+ * notification, kept after the notification is swiped away by the user and
+ * forgotten when the clock app withdraws it itself (alarm dismissed or rung)
+ * or once its time has passed.
+ */
+object AlarmMemory {
+    private fun sp(c: Context) = c.getSharedPreferences("alarm_memory", Context.MODE_PRIVATE)
+
+    fun remember(c: Context, a: NextAlarm) {
+        val cur = get(c)
+        if (cur == a) return
+        sp(c).edit().putLong("at", a.triggerAt).putString("pkg", a.sourcePkg).apply()
+        com.nightstand.WatcherService.log("alarm learned from notification: ${java.util.Date(a.triggerAt)} (${a.sourcePkg})")
+    }
+
+    fun forget(c: Context, why: String) {
+        if (get(c) == null) return
+        sp(c).edit().clear().apply()
+        com.nightstand.WatcherService.log("alarm memory cleared: $why")
+    }
+
+    fun get(c: Context, now: Long = System.currentTimeMillis()): NextAlarm? {
+        val at = sp(c).getLong("at", 0)
+        if (at <= now) return null
+        return NextAlarm(at, sp(c).getString("pkg", null))
+    }
+}
+
+/**
+ * Re-reads the next alarm right after an internal holder (e.g. Bedtime at
+ * 9:30 PM) passes, so the real clock alarm shows immediately. Uses a plain
+ * inexact wake-up — NOT setAlarmClock, which would itself take the slot.
+ */
+object AlarmRecheck {
+    const val ACTION = "com.nightstand.ALARM_RECHECK"
+
+    fun schedule(c: Context) {
+        val am = c.getSystemService(AlarmManager::class.java)
+        val pi = android.app.PendingIntent.getBroadcast(
+            c, 42, android.content.Intent(c, AlarmRecheckReceiver::class.java).setAction(ACTION),
+            android.app.PendingIntent.FLAG_IMMUTABLE or android.app.PendingIntent.FLAG_UPDATE_CURRENT,
+        )
+        am.cancel(pi)
+        val holder = Alarms.internalHolder(c) ?: return
+        am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, holder.triggerAt + 15_000, pi)
+        com.nightstand.WatcherService.log("recheck scheduled after internal alarm at ${java.util.Date(holder.triggerAt)}")
+    }
+}
+
+class AlarmRecheckReceiver : android.content.BroadcastReceiver() {
+    override fun onReceive(c: Context, i: android.content.Intent) {
+        com.nightstand.WatcherService.log("internal alarm passed; next alarm now: " + Alarms.explain(c))
+        com.nightstand.StandByState.notifyAlarmChanged()
+        AlarmRecheck.schedule(c) // a later internal alarm may hold the slot next
+    }
+
 }
 
 /**
@@ -118,6 +193,25 @@ object TimerParser {
 
     private val TIME = Regex("""\b(?:(\d{1,2}):)?(\d{1,2}):(\d{2})\b""")
     private val AMPM = Regex("""(?i)\b(am|pm)\b|[午時]""")
+
+    /** Why [parse] did or didn't read a timer from this notification (Look/Debug). */
+    fun explain(f: Fields, now: Long): String {
+        val t = parse(f, now)
+        val head = "${f.pkg.substringAfterLast('.')}: \"${f.title ?: ""}\" / \"${f.text ?: ""}\" " +
+            "(ongoing=${f.ongoing}, chrono=${f.showChronometer}, countdown=${f.countDown}, category=${f.category})"
+        if (t != null) return "$head → ${t.state.name.lowercase()} " +
+            formatCountdown(t.remainingMs(now)) + (t.label?.let { " \"$it\"" } ?: "")
+        val all = listOfNotNull(f.title, f.text).joinToString(" ").lowercase()
+        val why = when {
+            f.pkg !in ClockApps.PACKAGES -> "not a clock app"
+            "stopwatch" in all -> "stopwatch, not a timer"
+            "alarm" in all && "timer" !in all -> "alarm notification, not a timer"
+            !f.showChronometer && !TIME.containsMatchIn(all) -> "no countdown and no m:ss time in its text — unknown format, please share Debug log"
+            f.showChronometer && !f.countDown -> "counts up (stopwatch-like)"
+            else -> "not recognised — please share Debug log"
+        }
+        return "$head → skipped: $why"
+    }
 
     fun parse(f: Fields, now: Long): RunningTimer? {
         if (f.pkg !in ClockApps.PACKAGES) return null
