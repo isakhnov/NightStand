@@ -47,6 +47,9 @@ object Weather {
     fun hasLocationPermission(c: Context) =
         c.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
 
+    /** Debug: make the next refresh fetch regardless of age. */
+    fun invalidate() { current = current?.copy(fetchedAt = 0) }
+
     fun loadCache(c: Context) {
         if (current != null) return
         current = runCatching { parse(JSONObject(Prefs.weatherCache(c) ?: return)) }.getOrNull()

@@ -3,8 +3,6 @@ package com.nightstand.pages
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.ColorMatrix
-import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
@@ -49,13 +47,6 @@ class PhotosPage(context: Context, data: DisplayData) : ClockSplitPage(context, 
     private val msg = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = Fonts.bold }
     private val clip = Path()
 
-    /** Luminance → night red (pure red), so photos stay recognisable but monochrome. */
-    private val nightFilter = ColorMatrixColorFilter(ColorMatrix(floatArrayOf(
-        0.299f, 0.587f, 0.114f, 0f, 0f,
-        0f, 0f, 0f, 0f, 0f,
-        0f, 0f, 0f, 0f, 0f,
-        0f, 0f, 0f, 0.8f, 0f,
-    )))
 
     /** Preview/test: show [b] as if loaded [ageMs] ago. */
     internal fun showForPreview(b: Bitmap, ageMs: Long) {
@@ -114,7 +105,7 @@ class PhotosPage(context: Context, data: DisplayData) : ClockSplitPage(context, 
         val night = palette.night
         clip.reset(); clip.addRoundRect(r, radius, radius, Path.Direction.CW)
         c.save(); c.clipPath(clip)
-        bmpPaint.colorFilter = if (night) nightFilter else null
+        bmpPaint.colorFilter = if (night) palette.nightImageFilter(0.8f) else null
 
         val fade = (t.toFloat() / FADE_MS).coerceIn(0f, 1f)
         prev?.let { if (fade < 1f) drawPhoto(c, it, r, Long.MAX_VALUE / 4, -panDir, 255) }

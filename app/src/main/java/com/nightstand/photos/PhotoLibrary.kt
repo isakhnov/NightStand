@@ -48,20 +48,23 @@ object PhotoLibrary {
     private fun noScreenshots(): Pair<String, Array<String>?> =
         "${MediaStore.Images.Media.BUCKET_DISPLAY_NAME} NOT IN ('Screenshots','Screen recordings')" to null
 
-    data class Album(val id: String, val name: String, val count: Int)
+    data class Album(val id: String, val name: String, val count: Int, val cover: Uri)
 
     fun albums(c: Context): List<Album> {
         if (!isGranted(c)) return emptyList()
         val counts = LinkedHashMap<String, Album>()
         c.contentResolver.query(
             MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-            arrayOf(MediaStore.Images.Media.BUCKET_ID, MediaStore.Images.Media.BUCKET_DISPLAY_NAME),
-            null, null, null
+            arrayOf(MediaStore.Images.Media.BUCKET_ID, MediaStore.Images.Media.BUCKET_DISPLAY_NAME, MediaStore.Images.Media._ID),
+            null, null, "${MediaStore.Images.Media.DATE_ADDED} DESC"
         )?.use { cur ->
+            val coll = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
             while (cur.moveToNext()) {
                 val id = cur.getString(0) ?: continue
                 val name = cur.getString(1) ?: "(unnamed)"
-                counts[id] = counts[id]?.let { it.copy(count = it.count + 1) } ?: Album(id, name, 1)
+                // Newest photo in the album is its cover.
+                counts[id] = counts[id]?.let { it.copy(count = it.count + 1) }
+                    ?: Album(id, name, 1, ContentUris.withAppendedId(coll, cur.getLong(2)))
             }
         }
         return counts.values.sortedByDescending { it.count }

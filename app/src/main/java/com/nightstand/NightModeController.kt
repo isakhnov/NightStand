@@ -10,8 +10,8 @@ package com.nightstand
  * Fallback when the device reports no light sensor: night by schedule.
  */
 class NightModeController(
-    private val enterLux: Float = 3f,
-    private val exitLux: Float = 15f,
+    var enterLux: Float = 3f,
+    var exitLux: Float = 15f,
     private val holdMs: Long = 8000,
 ) {
     var night = false

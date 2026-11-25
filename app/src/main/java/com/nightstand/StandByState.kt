@@ -24,6 +24,10 @@ object StandByState {
     val changeListeners = mutableSetOf<() -> Unit>()
 
     var lastPosture = PostureDetector.Posture.UNKNOWN
+    /** Debug tab: force night mode on/off; null = follow the light sensor. */
+    var forceNight: Boolean? = null
+    /** Debug tab: watcher uptime. */
+    var watcherStartedAt = 0L
 
     fun setVisible(v: Boolean) = listener?.invoke(v)
     fun requestHide() = hideRequest?.invoke()

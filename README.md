@@ -24,8 +24,18 @@ Calendar is Google accounts only (Outlook/work deliberately excluded). Weather
 data: [Open-Meteo](https://open-meteo.com/) (CC BY 4.0). Research and mockups
 for each view: [`docs/views/`](docs/views/).
 
+**Settings** (launcher icon): tabs **Home** (status, preview of tonight,
+which view opens first, night brightness) · **Views** (order, on/off, each
+view's own options: Google calendars, °F/°C, photo source/album) · **Look**
+(clock style, second hand, night colour — pure red / deep / warm / amber —
+brightness, how dark the room must be) · **Setup** (permissions, "Show Debug
+tab") · **Debug** (hidden by default: live sensors, test launch, force night,
+log with Share). Built with Jetpack Compose; the display itself stays Canvas.
+Mockups: [`docs/settings-mockup/`](docs/settings-mockup/).
+
 **Previews without a device:** `./gradlew testDebugUnitTest --tests com.nightstand.PagePreviewTest`
-renders every view, day and night, analog and digital, to `app/build/previews/`.
+renders every view, day and night, analog and digital, to `app/build/previews/`;
+`SettingsPreviewTest` does the same for each settings tab.
 
 > Status: **prototype**. It builds and its logic is unit-tested, but it hasn't run on a
 > real S26 Ultra yet. See [On-device test plan](#on-device-test-plan).

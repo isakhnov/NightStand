@@ -30,7 +30,8 @@ import java.util.Locale
 class ClockAgendaPage(context: Context, data: DisplayData) : Page(context, data) {
     companion object { const val ID = "clock_agenda" }
     override val pageId = ID
-    override val needsSeconds get() = Prefs.clockStyle(context) == Prefs.ClockStyle.ANALOG
+    override val needsSeconds get() =
+        Prefs.clockStyle(context) == Prefs.ClockStyle.ANALOG && Prefs.secondHand(context)
 
     private val clockPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = Fonts.heavy }
     private val text = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = Fonts.semibold }
@@ -53,7 +54,7 @@ class ClockAgendaPage(context: Context, data: DisplayData) : Page(context, data)
 
         if (Prefs.clockStyle(context) == Prefs.ClockStyle.ANALOG) {
             val r = minOf(split - pad * 2, bottom - pad) / 2
-            AnalogClock.draw(c, pad + split / 2 - pad / 2, pad / 2 + (bottom) / 2, r, now, p, showSeconds = true)
+            AnalogClock.draw(c, pad + split / 2 - pad / 2, pad / 2 + (bottom) / 2, r, now, p, showSeconds = Prefs.secondHand(context))
         } else {
             drawDigital(c, now, pad, pad, split - pad, bottom)
         }

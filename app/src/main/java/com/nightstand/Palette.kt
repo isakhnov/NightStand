@@ -10,26 +10,49 @@ import android.graphics.Typeface
  * bright and only window brightness (Prefs.nightBrightness) dims it.
  * Second device test: #FF3B1F was too orange → pure red.
  */
-data class Palette(val night: Boolean) {
+data class Palette(val night: Boolean, val red: Int = NightColor.PURE.argb) {
     val background = 0xFF000000.toInt()
-    val primary = if (night) RED else 0xFFF5F5F7.toInt()
-    val secondary = if (night) RED_SOFT else 0xFF8E8E93.toInt()
-    val accent = if (night) RED else 0xFFFF9F0A.toInt()
+    val primary = if (night) red else 0xFFF5F5F7.toInt()
+    /** Same hue, lower alpha: hierarchy without introducing a second colour. */
+    val secondary = if (night) (red and 0x00FFFFFF) or 0xA6000000.toInt() else 0xFF8E8E93.toInt()
+    val accent = if (night) red else 0xFFFF9F0A.toInt()
     /** Analog second hand. */
-    val second = if (night) RED else 0xFFFF9F0A.toInt()
+    val second = if (night) red else 0xFFFF9F0A.toInt()
+    /** [red] at a given alpha (0..255), for tracks and placeholders. */
+    fun redAlpha(a: Int) = (red and 0x00FFFFFF) or (a shl 24)
+
+    /**
+     * Photos/album art at night: luminance mapped onto the night colour only,
+     * so images stay recognisable but add no other hue.
+     */
+    fun nightImageFilter(alpha: Float): android.graphics.ColorMatrixColorFilter {
+        val r = ((red shr 16) and 0xFF) / 255f
+        val g = ((red shr 8) and 0xFF) / 255f
+        val b = (red and 0xFF) / 255f
+        return android.graphics.ColorMatrixColorFilter(android.graphics.ColorMatrix(floatArrayOf(
+            0.299f * r, 0.587f * r, 0.114f * r, 0f, 0f,
+            0.299f * g, 0.587f * g, 0.114f * g, 0f, 0f,
+            0.299f * b, 0.587f * b, 0.114f * b, 0f, 0f,
+            0f, 0f, 0f, alpha, 0f,
+        )))
+    }
 
     companion object {
-        /**
-         * Pure red. Apple publishes no value; StandBy's night filter appears to
-         * keep only the red channel. 0.2 used #FF3B1F, which read as orange
-         * next to the iPhone (phone cameras exaggerate this, so judge by eye).
-         */
-        const val RED = 0xFFFF0000.toInt()
-        /** Same hue, lower alpha: hierarchy without introducing a second colour. */
-        const val RED_SOFT = 0xA6FF0000.toInt()
         val DAY = Palette(false)
-        val NIGHT = Palette(true)
+        fun night(c: NightColor = NightColor.PURE) = Palette(true, c.argb)
     }
+}
+
+/**
+ * Night colours offered in Look. Apple publishes no StandBy value; its filter
+ * appears to keep only the red channel, hence PURE as default. 0.2's #FF3B1F
+ * read as orange next to the iPhone; AMBER is there for those who prefer it.
+ */
+enum class NightColor(val argb: Int, val label: String) {
+    PURE(0xFFFF0000.toInt(), "Pure red"),
+    DEEP(0xFFD00000.toInt(), "Deep"),
+    WARM(0xFFFF2200.toInt(), "Warm"),
+    AMBER(0xFFFF6A00.toInt(), "Amber"),
 }
 
 /** Heavy, rounded-feeling weights closest to iOS StandBy's SF Pro Rounded. */

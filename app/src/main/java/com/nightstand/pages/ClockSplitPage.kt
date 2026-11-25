@@ -19,7 +19,8 @@ import java.util.Locale
  * the analog/digital setting. Burn-in shift applies to both halves.
  */
 abstract class ClockSplitPage(context: Context, data: DisplayData) : Page(context, data) {
-    override val needsSeconds get() = Prefs.clockStyle(context) == Prefs.ClockStyle.ANALOG
+    override val needsSeconds get() =
+        Prefs.clockStyle(context) == Prefs.ClockStyle.ANALOG && Prefs.secondHand(context)
 
     /** Most of the width the clock may take; it is normally height-limited. */
     protected open val maxClockFraction = 0.46f
@@ -48,7 +49,7 @@ abstract class ClockSplitPage(context: Context, data: DisplayData) : Page(contex
 
         if (Prefs.clockStyle(context) == Prefs.ClockStyle.ANALOG) {
             val r = minOf(h / 2 - pad, w * maxClockFraction / 2 - pad)
-            AnalogClock.draw(c, pad + r, h / 2, r, now, p, showSeconds = true)
+            AnalogClock.draw(c, pad + r, h / 2, r, now, p, showSeconds = Prefs.secondHand(context))
             clockRight = pad + 2 * r
         } else {
             val is24 = DateFormat.is24HourFormat(context)

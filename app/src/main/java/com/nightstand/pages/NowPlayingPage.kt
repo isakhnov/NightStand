@@ -4,8 +4,6 @@ import android.app.Activity
 import android.app.KeyguardManager
 import android.content.Context
 import android.graphics.Canvas
-import android.graphics.ColorMatrix
-import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
@@ -40,12 +38,6 @@ class NowPlayingPage(context: Context, data: DisplayData) : ClockSplitPage(conte
     private val prevHit = RectF(); private val playHit = RectF(); private val nextHit = RectF()
     private val openHit = RectF()
 
-    private val nightArt = ColorMatrixColorFilter(ColorMatrix(floatArrayOf(
-        0.299f, 0.587f, 0.114f, 0f, 0f,
-        0f, 0f, 0f, 0f, 0f,
-        0f, 0f, 0f, 0f, 0f,
-        0f, 0f, 0f, 0.75f, 0f,
-    )))
 
     override fun onShown() = player.start()
     override fun onHidden() = player.stop()
@@ -98,10 +90,10 @@ class NowPlayingPage(context: Context, data: DisplayData) : ClockSplitPage(conte
         clip.reset(); clip.addRoundRect(ar, dp(16f), dp(16f), Path.Direction.CW)
         c.save(); c.clipPath(clip)
         if (t.art != null) {
-            artPaint.colorFilter = if (p.night) nightArt else null
+            artPaint.colorFilter = if (p.night) p.nightImageFilter(0.75f) else null
             c.drawBitmap(t.art, null, ar, artPaint)
         } else {
-            fill.color = if (p.night) 0x33FF0000 else 0xFF2C2C2E.toInt(); c.drawRect(ar, fill)
+            fill.color = if (p.night) p.redAlpha(0x33) else 0xFF2C2C2E.toInt(); c.drawRect(ar, fill)
         }
         c.restore()
 
@@ -121,7 +113,7 @@ class NowPlayingPage(context: Context, data: DisplayData) : ClockSplitPage(conte
         val py = ar.bottom + dp(26f)
         val pos = player.positionMs()
         val frac = if (t.durationMs > 0) (pos.toFloat() / t.durationMs).coerceIn(0f, 1f) else 0f
-        fill.color = if (p.night) 0x40FF0000 else 0xFF3A3A3C.toInt()
+        fill.color = if (p.night) p.redAlpha(0x40) else 0xFF3A3A3C.toInt()
         c.drawRoundRect(r.left, py, r.right, py + dp(6f), dp(3f), dp(3f), fill)
         fill.color = p.primary
         c.drawRoundRect(r.left, py, r.left + r.width() * frac, py + dp(6f), dp(3f), dp(3f), fill)

@@ -79,6 +79,7 @@ class WatcherService : Service(), SensorEventListener {
         }
         setCharging(isPluggedIn())
         refreshLocked()
+        StandByState.watcherStartedAt = System.currentTimeMillis()
         log("watcher started; charging=${policy.charging}")
     }
 

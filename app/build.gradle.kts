@@ -16,8 +16,8 @@ android {
         // foreground service started from BOOT_COMPLETED, full-screen intent,
         // overlay-permission background launch — is allowed at 35.
         targetSdk = 35
-        versionCode = 4
-        versionName = "0.4"
+        versionCode = 5
+        versionName = "0.5"
     }
 
     buildTypes {
@@ -28,15 +28,25 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions { jvmTarget = "17" }
+    // Compose for the settings screens only; the nightstand display stays Canvas.
+    buildFeatures { compose = true }
+    composeOptions { kotlinCompilerExtensionVersion = "1.5.14" } // matches Kotlin 1.9.24
     testOptions { unitTests.isIncludeAndroidResources = true }
 }
 
 dependencies {
     implementation("androidx.core:core-ktx:1.13.1")
+    implementation(platform("androidx.compose:compose-bom:2024.09.03"))
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.activity:activity-compose:1.9.2")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.6")
     testImplementation("junit:junit:4.13.2")
     // Renders pages to PNG on the JVM (PagePreviewTest) — layout checks without a device.
     testImplementation("org.robolectric:robolectric:4.13")
     testImplementation("androidx.test:core:1.6.1")
+    testImplementation("androidx.compose.ui:ui-test-junit4")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
 }
 
 // Robolectric's own downloader doesn't go through HTTP proxies reliably; let

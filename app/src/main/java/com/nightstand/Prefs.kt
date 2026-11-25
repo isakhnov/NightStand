@@ -58,4 +58,42 @@ object Prefs {
     }
     fun setPhotoAlbum(c: Context, id: String, name: String) =
         sp(c).edit().putString("photoAlbumId", id).putString("photoAlbumName", name).apply()
+
+    // --- Look ---------------------------------------------------------------
+    fun nightColor(c: Context) =
+        runCatching { NightColor.valueOf(sp(c).getString("nightColor", null)!!) }.getOrDefault(NightColor.PURE)
+    fun setNightColor(c: Context, v: NightColor) = sp(c).edit().putString("nightColor", v.name).apply()
+
+    fun secondHand(c: Context) = sp(c).getBoolean("secondHand", true)
+    fun setSecondHand(c: Context, v: Boolean) = sp(c).edit().putBoolean("secondHand", v).apply()
+
+    /** How dark the room must be for red mode: enter below / leave above (lux). */
+    enum class Darkness(val label: String, val enterLux: Float, val exitLux: Float) {
+        VERY_DARK("Very dark", 1f, 6f), DARK("Dark", 3f, 15f), DIM("Dim", 10f, 40f)
+    }
+    fun darkness(c: Context) =
+        runCatching { Darkness.valueOf(sp(c).getString("darkness", null)!!) }.getOrDefault(Darkness.DARK)
+    fun setDarkness(c: Context, v: Darkness) = sp(c).edit().putString("darkness", v.name).apply()
+
+    // --- Home: which view opens first ---------------------------------------
+    /** null = last used; otherwise a page id. */
+    fun startPage(c: Context): String? = sp(c).getString("startPage", null)
+    fun setStartPage(c: Context, id: String?) = sp(c).edit().putString("startPage", id).apply()
+
+    // --- Views ----------------------------------------------------------------
+    fun pageOrder(c: Context): List<String> =
+        sp(c).getString("pageOrder", null)?.split(',')?.filter { it.isNotBlank() } ?: emptyList()
+    fun setPageOrder(c: Context, ids: List<String>) = sp(c).edit().putString("pageOrder", ids.joinToString(",")).apply()
+
+    /** Google calendars the user switched off (ids); default shows all. */
+    fun calendarsOff(c: Context): Set<String> = sp(c).getStringSet("calendarsOff", emptySet())!!
+    fun setCalendarOn(c: Context, id: Long, on: Boolean) {
+        val s = calendarsOff(c).toMutableSet()
+        if (on) s.remove(id.toString()) else s.add(id.toString())
+        sp(c).edit().putStringSet("calendarsOff", s).apply()
+    }
+
+    // --- Setup ------------------------------------------------------------------
+    fun showDebug(c: Context) = sp(c).getBoolean("showDebug", false)
+    fun setShowDebug(c: Context, v: Boolean) = sp(c).edit().putBoolean("showDebug", v).apply()
 }

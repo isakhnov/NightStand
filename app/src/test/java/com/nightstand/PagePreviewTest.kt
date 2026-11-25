@@ -48,7 +48,7 @@ class PagePreviewTest {
             Prefs.setClockStyle(ctx, style)
             for (e in PageRegistry.all) {
                 val page = e.create(ctx, data)
-                page.palette = if (night) Palette.NIGHT else Palette.DAY
+                page.palette = if (night) Palette.night() else Palette.DAY
                 when (page) {
                     is PhotosPage -> page.showForPreview(samplePhoto(), 6_000)
                     is NowPlayingPage -> page.player.apply {

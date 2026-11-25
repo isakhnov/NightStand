@@ -76,15 +76,30 @@ object CalendarSource {
         return out.sortedWith(compareBy({ !it.allDay }, { it.begin })).take(limit)
     }
 
-    private fun googleCalendarIds(c: Context): List<Long> {
-        val out = mutableListOf<Long>()
+    data class Cal(val id: Long, val name: String, val account: String, val color: Int)
+
+    /** All Google calendars on the phone (for the Views tab). */
+    fun googleCalendars(c: Context): List<Cal> {
+        if (!isGranted(c)) return emptyList()
+        val out = mutableListOf<Cal>()
         try {
             c.contentResolver.query(
-                CalendarContract.Calendars.CONTENT_URI, arrayOf(CalendarContract.Calendars._ID),
+                CalendarContract.Calendars.CONTENT_URI,
+                arrayOf(
+                    CalendarContract.Calendars._ID, CalendarContract.Calendars.CALENDAR_DISPLAY_NAME,
+                    CalendarContract.Calendars.ACCOUNT_NAME, CalendarContract.Calendars.CALENDAR_COLOR,
+                ),
                 "${CalendarContract.Calendars.ACCOUNT_TYPE}=?", arrayOf(GOOGLE_ACCOUNT_TYPE), null
-            )?.use { cur -> while (cur.moveToNext()) out += cur.getLong(0) }
+            )?.use { cur ->
+                while (cur.moveToNext()) out += Cal(cur.getLong(0), cur.getString(1) ?: "", cur.getString(2) ?: "", cur.getInt(3))
+            }
         } catch (_: SecurityException) {}
         return out
+    }
+
+    private fun googleCalendarIds(c: Context): List<Long> {
+        val off = com.nightstand.Prefs.calendarsOff(c)
+        return googleCalendars(c).map { it.id }.filter { it.toString() !in off }
     }
 
     private fun utcDayToLocal(utcMidnight: Long): Long {

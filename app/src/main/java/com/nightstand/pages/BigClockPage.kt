@@ -16,7 +16,8 @@ import java.util.Locale
 class BigClockPage(context: Context, data: DisplayData) : Page(context, data) {
     companion object { const val ID = "big_clock" }
     override val pageId = ID
-    override val needsSeconds get() = Prefs.clockStyle(context) == Prefs.ClockStyle.ANALOG
+    override val needsSeconds get() =
+        Prefs.clockStyle(context) == Prefs.ClockStyle.ANALOG && Prefs.secondHand(context)
 
     private val big = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = Fonts.heavy; textAlign = Paint.Align.CENTER }
     private val small = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = Fonts.bold }
@@ -34,7 +35,7 @@ class BigClockPage(context: Context, data: DisplayData) : Page(context, data) {
 
         if (Prefs.clockStyle(context) == Prefs.ClockStyle.ANALOG) {
             val r = h / 2 - dp(18f)
-            AnalogClock.draw(c, w / 2, h / 2, r, now, p, showSeconds = true)
+            AnalogClock.draw(c, w / 2, h / 2, r, now, p, showSeconds = Prefs.secondHand(context))
             small.textSize = dp(15f); small.color = p.accent
             small.textAlign = Paint.Align.LEFT
             c.drawText(date, dp(24f), h - dp(24f), small)

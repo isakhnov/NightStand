@@ -108,8 +108,8 @@ class NightstandActivity : Activity(), SensorEventListener {
 
     private fun buildPages() {
         val off = Prefs.disabledPages(this)
-        val entries = PageRegistry.all.filter { it.id !in off }.ifEmpty { PageRegistry.all.take(1) }
-        container.setPages(entries.map { it.create(this, data) }, Prefs.lastPage(this))
+        val entries = PageRegistry.ordered(this).filter { it.id !in off }.ifEmpty { PageRegistry.all.take(1) }
+        container.setPages(entries.map { it.create(this, data) }, Prefs.startPage(this) ?: Prefs.lastPage(this))
     }
 
     override fun onStart() {
@@ -124,6 +124,7 @@ class NightstandActivity : Activity(), SensorEventListener {
             contentResolver.registerContentObserver(CalendarContract.CONTENT_URI, true, calendarObserver)
         }
         StandByState.changeListeners += onFeedChanged
+        Prefs.darkness(this).let { nightCtl.enterLux = it.enterLux; nightCtl.exitLux = it.exitLux }
         lightSensor?.let { sensors.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL) }
         data.showNotifContent = Prefs.showContent(this)
         refreshEvents(); refreshNotifs()
@@ -197,7 +198,7 @@ class NightstandActivity : Activity(), SensorEventListener {
         val changed = if (firstLux) {
             // Decide immediately on launch instead of waiting out the hold time.
             firstLux = false
-            nightCtl.set(lux < 3f)
+            nightCtl.set(lux < nightCtl.enterLux)
         } else nightCtl.onLux(lux, System.currentTimeMillis())
         if (changed) {
             WatcherService.log("night=${nightCtl.night} (lux=$lux)")
@@ -207,12 +208,14 @@ class NightstandActivity : Activity(), SensorEventListener {
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
 
+    private val isNight get() = StandByState.forceNight ?: nightCtl.night
+
     private fun applyBrightness() {
-        container.palette = if (nightCtl.night) Palette.NIGHT else Palette.DAY
+        container.palette = if (isNight) Palette.night(Prefs.nightColor(this)) else Palette.DAY
         val night = Prefs.nightBrightness(this)
         window.attributes = window.attributes.apply {
             screenBrightness = when {
-                !nightCtl.night -> WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+                !isNight -> WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
                 boosted -> minOf(1f, night + 0.3f)
                 else -> night
             }
@@ -221,7 +224,7 @@ class NightstandActivity : Activity(), SensorEventListener {
 
     /** Swipe up/down: tune night brightness live and remember it. */
     private fun adjustNightBrightness(delta: Float): String? {
-        if (!nightCtl.night) return "Brightness follows the system in day mode"
+        if (!isNight) return "Brightness follows the system in day mode"
         val v = (Prefs.nightBrightness(this) + delta * 0.6f).coerceIn(Prefs.MIN_NIGHT, 1f)
         Prefs.setNightBrightness(this, v)
         applyBrightness()
@@ -229,7 +232,7 @@ class NightstandActivity : Activity(), SensorEventListener {
     }
 
     private fun boost() {
-        if (!nightCtl.night) return
+        if (!isNight) return
         boosted = true
         applyBrightness()
         main.removeCallbacks(endBoost)

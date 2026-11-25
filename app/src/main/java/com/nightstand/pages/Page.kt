@@ -47,6 +47,14 @@ abstract class Page(context: Context, val data: DisplayData) : View(context) {
 object PageRegistry {
     data class Entry(val id: String, val title: String, val create: (Context, DisplayData) -> Page)
 
+    /** All entries in the user's order (Views tab); unknown/new ones appended. */
+    fun ordered(c: Context): List<Entry> {
+        val order = com.nightstand.Prefs.pageOrder(c)
+        return all.sortedBy { e -> order.indexOf(e.id).let { if (it < 0) Int.MAX_VALUE else it } }
+    }
+
+    fun title(id: String?) = all.firstOrNull { it.id == id }?.title
+
     val all = listOf(
         Entry(ClockAgendaPage.ID, "Clock + up next") { c, d -> ClockAgendaPage(c, d) },
         Entry(WeatherPage.ID, "Clock + weather") { c, d -> WeatherPage(c, d) },
