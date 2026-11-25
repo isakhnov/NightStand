@@ -56,6 +56,14 @@ fun DebugTab(s: SettingsScope) {
     val locked = c.getSystemService(KeyguardManager::class.java).isKeyguardLocked
     val up = StandByState.watcherStartedAt.takeIf { it > 0 }?.let { (now - it) / 60_000 }
     val posture = StandByState.lastPosture
+    // Read everything live HERE, in the scope that recomposes every second.
+    // (0.7.3 read the log inside a nested card lambda, which Compose skipped,
+    // so the on-screen log never updated after the tab opened.)
+    val logText = StandByState.logText()
+    val alarmExplain = com.nightstand.clock.Alarms.explain(c)
+    val remembered = com.nightstand.clock.AlarmMemory.get(c)
+    val timerReport = com.nightstand.NotificationFeed.timerReport
+    val notifAccess = com.nightstand.NotificationFeed.isGranted(c)
 
     Column(Modifier.verticalScroll(rememberScrollState())) {
         ScreenHeader("Debug", "Live — updates every second")
@@ -82,17 +90,17 @@ fun DebugTab(s: SettingsScope) {
             Text("Posture is only measured while plugged in.", fontSize = 12.sp, color = Muted)
             Column(Modifier.fillMaxWidth().padding(top = 8.dp).clip(RoundedCornerShape(14.dp)).background(Surface2).padding(12.dp)) {
                 Text("NEXT ALARM (ANDROID)", fontSize = 11.sp, color = Muted, fontWeight = FontWeight.Bold)
-                Text(com.nightstand.clock.Alarms.explain(c), fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                Text(alarmExplain, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                 Text("REMEMBERED FROM NOTIFICATION", fontSize = 11.sp, color = Muted, fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(top = 8.dp))
-                Text(com.nightstand.clock.AlarmMemory.get(c)?.let { java.util.Date(it.triggerAt).toString() + " (" + it.sourcePkg + ")" } ?: "none",
+                Text(remembered?.let { java.util.Date(it.triggerAt).toString() + " (" + it.sourcePkg + ")" } ?: "none",
                     fontSize = 13.sp)
                 Text("TIMERS (CLOCK NOTIFICATIONS)", fontSize = 11.sp, color = Muted, fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(top = 8.dp))
                 Text(when {
-                    !com.nightstand.NotificationFeed.isGranted(c) -> "Notification access is off"
-                    com.nightstand.NotificationFeed.timerReport.isEmpty() -> "No clock-app notification is showing"
-                    else -> com.nightstand.NotificationFeed.timerReport.joinToString("\n\n")
+                    !notifAccess -> "Notification access is off"
+                    timerReport.isEmpty() -> "No clock-app notification is showing"
+                    else -> timerReport.joinToString("\n\n")
                 }, fontSize = 13.sp)
             }
 
@@ -115,6 +123,7 @@ fun DebugTab(s: SettingsScope) {
                     val dump = com.nightstand.NotificationFeed.clockDump
                     WatcherService.log("clock notifications:\n" + dump.ifEmpty { "(none — is a timer running? is Notification access on?)" })
                     WatcherService.log("parsed timers: " + com.nightstand.NotificationFeed.timers)
+                    WatcherService.log("timer report:\n" + com.nightstand.NotificationFeed.timerReport.joinToString("\n"))
                 }) { Text("Capture clock notifications") }
             }
 
@@ -124,12 +133,12 @@ fun DebugTab(s: SettingsScope) {
                     c.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
                         type = "text/plain"
                         putExtra(Intent.EXTRA_SUBJECT, "Nightstand log")
-                        putExtra(Intent.EXTRA_TEXT, StandByState.logText())
+                        putExtra(Intent.EXTRA_TEXT, logText)
                     }, "Share log").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
                 })
             }
             SettingsCard(padding = 14) {
-                Text(StandByState.logText().ifEmpty { "(empty — events appear here as they happen)" },
+                Text(logText.ifEmpty { "(empty — events appear here as they happen)" },
                     fontFamily = FontFamily.Monospace, fontSize = 11.5.sp, lineHeight = 17.sp, color = Color(0xFFB9B9C0))
             }
             Spacer(Modifier.height(20.dp))

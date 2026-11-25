@@ -108,9 +108,77 @@ class NotificationFeed : NotificationListenerService() {
         StandByState.notifyChanged()
     }
 
+    private data class Custom(val endsAt: Long?, val countDown: Boolean, val texts: List<String>)
+
+    /**
+     * Inflate the notification's custom layout in our process and read its
+     * Chronometer. Chronometer.base is on the elapsedRealtime clock; the base
+     * was set relative to when the notification was posted, so convert via
+     * postTime. Only for clock apps; failures just mean "no custom data".
+     */
+    @Suppress("DEPRECATION")
+    private fun custom(sbn: StatusBarNotification): Custom {
+        val n = sbn.notification
+        val rv = n.contentView ?: n.bigContentView ?: return Custom(null, false, emptyList())
+        return try {
+            val root = rv.apply(this, android.widget.FrameLayout(this))
+            var end: Long? = null; var down = false
+            val texts = mutableListOf<String>()
+            fun walk(v: android.view.View) {
+                when (v) {
+                    is android.widget.Chronometer -> {
+                        val nowWall = System.currentTimeMillis()
+                        val nowElapsed = android.os.SystemClock.elapsedRealtime()
+                        end = nowWall + (v.base - nowElapsed)
+                        down = v.isCountDown
+                    }
+                    is android.widget.TextView -> v.text?.toString()?.takeIf { it.isNotBlank() }?.let { texts += it }
+                }
+                if (v is android.view.ViewGroup) for (i in 0 until v.childCount) walk(v.getChildAt(i))
+            }
+            walk(root)
+            Custom(end, down, texts.distinct())
+        } catch (t: Throwable) {
+            Custom(null, false, emptyList())
+        }
+    }
+
+    private data class MetricTimer(val endsAt: Long?, val pausedMs: Long?, val label: String?)
+
+    /**
+     * Android 17 Notification.MetricStyle → first timer metric. Read by
+     * reflection (public API, compileSdk stays 36): style.getMetrics() →
+     * Metric.getValue() as TimeDifference → isTimer(), getZeroTime() /
+     * getZeroElapsedRealtime() when running, getPausedDuration() when paused.
+     */
+    private fun metricTimer(sbn: StatusBarNotification): MetricTimer? = try {
+        val style = Notification.Builder.recoverBuilder(this, sbn.notification).style
+        if (style == null || style.javaClass.name != "android.app.Notification\$MetricStyle") null
+        else {
+            @Suppress("UNCHECKED_CAST")
+            val metrics = style.javaClass.getMethod("getMetrics").invoke(style) as List<Any>
+            metrics.firstNotNullOfOrNull { m ->
+                val v = m.javaClass.getMethod("getValue").invoke(m) ?: return@firstNotNullOfOrNull null
+                val vc = v.javaClass
+                if (!vc.name.endsWith("TimeDifference") || vc.getMethod("isTimer").invoke(v) != true) return@firstNotNullOfOrNull null
+                val label = m.javaClass.getMethod("getLabel").invoke(m)?.toString()
+                val paused = vc.getMethod("getPausedDuration").invoke(v) as java.time.Duration?
+                val zeroWall = (vc.getMethod("getZeroTime").invoke(v) as java.time.Instant?)?.toEpochMilli()
+                    ?: (vc.getMethod("getZeroElapsedRealtime").invoke(v) as Long?)?.let {
+                        System.currentTimeMillis() + (it - android.os.SystemClock.elapsedRealtime())
+                    }
+                MetricTimer(if (paused == null) zeroWall else null, paused?.toMillis(), label)
+            }
+        }
+    } catch (t: Throwable) { null }
+
     private fun fields(sbn: StatusBarNotification): com.nightstand.clock.TimerParser.Fields {
         val n = sbn.notification
         val x = n.extras
+        val mt = if (sbn.packageName in com.nightstand.clock.ClockApps.PACKAGES &&
+            x.getString(Notification.EXTRA_TEMPLATE)?.endsWith("MetricStyle") == true) metricTimer(sbn) else null
+        val cv = if (mt == null && sbn.packageName in com.nightstand.clock.ClockApps.PACKAGES &&
+            !x.getBoolean(Notification.EXTRA_SHOW_CHRONOMETER)) custom(sbn) else Custom(null, false, emptyList())
         return com.nightstand.clock.TimerParser.Fields(
             pkg = sbn.packageName, ongoing = sbn.isOngoing, whenMs = n.`when`,
             showChronometer = x.getBoolean(Notification.EXTRA_SHOW_CHRONOMETER),
@@ -119,6 +187,13 @@ class NotificationFeed : NotificationListenerService() {
             text = x.getCharSequence(Notification.EXTRA_TEXT)?.toString(),
             actions = n.actions?.mapNotNull { it.title?.toString() } ?: emptyList(),
             category = n.category,
+            customEndsAt = cv.endsAt,
+            customCountDown = cv.countDown,
+            customTexts = cv.texts,
+            metricTimer = mt != null,
+            metricEndsAt = mt?.endsAt,
+            metricPausedMs = mt?.pausedMs,
+            metricLabel = mt?.label,
         )
     }
 
@@ -132,6 +207,7 @@ class NotificationFeed : NotificationListenerService() {
             append("style=${x.getString(Notification.EXTRA_TEMPLATE)}\n")
             x.keySet().sorted().forEach { k -> append("  $k = ${runCatching { x.get(k) }.getOrNull()}\n") }
             n.actions?.forEach { append("  action: ${it.title}\n") }
+            metricTimer(sbn)?.let { append("  metric timer: $it\n") }
         }
     }
 

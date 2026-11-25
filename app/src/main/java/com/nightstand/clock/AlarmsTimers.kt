@@ -189,6 +189,24 @@ object TimerParser {
         val text: String?,
         val actions: List<String>,
         val category: String?,
+        /**
+         * From a custom notification layout (Google Clock / AOSP DeskClock put
+         * the countdown in a Chronometer inside a custom view, leaving title and
+         * text empty): wall-clock time the countdown reaches zero, as of when
+         * the notification was posted. null if there is no such Chronometer.
+         */
+        val customEndsAt: Long? = null,
+        val customCountDown: Boolean = false,
+        /** Visible texts of the custom layout (label, "Timer", etc.). */
+        val customTexts: List<String> = emptyList(),
+        /**
+         * Android 17 MetricStyle (Google Clock on the S26): a timer metric's
+         * zero time (running) or paused remainder, plus its label.
+         */
+        val metricTimer: Boolean = false,
+        val metricEndsAt: Long? = null,
+        val metricPausedMs: Long? = null,
+        val metricLabel: String? = null,
     )
 
     private val TIME = Regex("""\b(?:(\d{1,2}):)?(\d{1,2}):(\d{2})\b""")
@@ -198,7 +216,10 @@ object TimerParser {
     fun explain(f: Fields, now: Long): String {
         val t = parse(f, now)
         val head = "${f.pkg.substringAfterLast('.')}: \"${f.title ?: ""}\" / \"${f.text ?: ""}\" " +
-            "(ongoing=${f.ongoing}, chrono=${f.showChronometer}, countdown=${f.countDown}, category=${f.category})"
+            "(ongoing=${f.ongoing}, chrono=${f.showChronometer}, countdown=${f.countDown}, category=${f.category}, " +
+            "metric=${if (f.metricTimer) "timer " + (f.metricPausedMs?.let { "paused " + formatCountdown(it) } ?: f.metricEndsAt?.let { "ends in " + formatCountdown(it - now) }) else "none"}, " +
+            "custom=${f.customEndsAt?.let { "ends in " + formatCountdown(it - now) } ?: "none"}${if (f.customCountDown) " ↓" else ""}" +
+            "${if (f.customTexts.isNotEmpty()) " " + f.customTexts else ""}, actions=${f.actions})"
         if (t != null) return "$head → ${t.state.name.lowercase()} " +
             formatCountdown(t.remainingMs(now)) + (t.label?.let { " \"$it\"" } ?: "")
         val all = listOfNotNull(f.title, f.text).joinToString(" ").lowercase()
@@ -206,17 +227,30 @@ object TimerParser {
             f.pkg !in ClockApps.PACKAGES -> "not a clock app"
             "stopwatch" in all -> "stopwatch, not a timer"
             "alarm" in all && "timer" !in all -> "alarm notification, not a timer"
-            !f.showChronometer && !TIME.containsMatchIn(all) -> "no countdown and no m:ss time in its text — unknown format, please share Debug log"
+            f.customEndsAt != null && !f.customCountDown -> "custom layout counts up (stopwatch-like)"
+            !f.showChronometer && f.customEndsAt == null && !TIME.containsMatchIn(all) ->
+                "no countdown in fields or custom layout — unknown format, please share Debug log"
             f.showChronometer && !f.countDown -> "counts up (stopwatch-like)"
             else -> "not recognised — please share Debug log"
         }
         return "$head → skipped: $why"
     }
 
+    private fun parseMetric(f: Fields, now: Long): RunningTimer? {
+        val ml = f.metricLabel?.takeIf { it.isNotBlank() && it.lowercase() != "timer" }
+        return when {
+            f.metricPausedMs != null -> RunningTimer(RunningTimer.State.PAUSED, pausedRemainingMs = f.metricPausedMs, label = ml)
+            f.metricEndsAt == null -> null
+            f.metricEndsAt <= now - 1000 -> RunningTimer(RunningTimer.State.RINGING, label = ml)
+            else -> RunningTimer(RunningTimer.State.RUNNING, endsAt = f.metricEndsAt, label = ml)
+        }
+    }
+
     fun parse(f: Fields, now: Long): RunningTimer? {
         if (f.pkg !in ClockApps.PACKAGES) return null
         val all = listOfNotNull(f.title, f.text).joinToString(" ")
         val lower = all.lowercase()
+        if (f.metricTimer) return parseMetric(f, now)
         // Never mistake alarm notifications ("Upcoming alarm 6:30 AM") or the stopwatch for a timer.
         if (f.category == android.app.Notification.CATEGORY_ALARM && "timer" !in lower) return null
         if ("stopwatch" in lower) return null
@@ -229,6 +263,17 @@ object TimerParser {
         }
         if (f.showChronometer && f.countDown && f.whenMs > now - 1000) {
             return RunningTimer(RunningTimer.State.RUNNING, endsAt = f.whenMs, label = label)
+        }
+        // Custom-layout countdown (Google Clock). Paused = a Resume/Start action.
+        if (f.customEndsAt != null && f.customCountDown) {
+            val customLabel = label ?: f.customTexts.firstOrNull {
+                it.isNotBlank() && !TIME.containsMatchIn(it) && it.lowercase() !in setOf("timer", "pause", "resume", "reset", "+1:00")
+            }
+            val paused = f.actions.any { it.lowercase().let { a -> "resume" in a || "start" in a || "continue" in a } }
+            return if (paused) RunningTimer(RunningTimer.State.PAUSED,
+                pausedRemainingMs = (f.customEndsAt - now).coerceAtLeast(0), label = customLabel)
+            else if (f.customEndsAt <= now - 1000) RunningTimer(RunningTimer.State.RINGING, label = customLabel)
+            else RunningTimer(RunningTimer.State.RUNNING, endsAt = f.customEndsAt, label = customLabel)
         }
         if (!f.ongoing || AMPM.containsMatchIn(all)) return null
         val m = TIME.find(all) ?: return null

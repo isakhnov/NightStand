@@ -110,3 +110,51 @@ class AlarmChooseTest {
         org.junit.Assert.assertNull(com.nightstand.clock.Alarms.choose(bedtime, null, now))
     }
 }
+
+class CustomLayoutTimerTest {
+    private val now = 1_000_000_000L
+    private fun f(endsAt: Long?, down: Boolean, actions: List<String>, texts: List<String> = emptyList()) =
+        TimerParser.Fields("com.google.android.deskclock", true, 0, false, false, "", "", actions, null, endsAt, down, texts)
+
+    @Test fun googleClockRunning() {
+        val t = TimerParser.parse(f(now + 299_000, true, listOf("Pause", "+1:00"), listOf("Pasta", "4:59")), now)!!
+        assertEquals(State.RUNNING, t.state)
+        assertEquals(299_000, t.remainingMs(now))
+        assertEquals("Pasta", t.label)
+    }
+
+    @Test fun googleClockPaused() {
+        val t = TimerParser.parse(f(now + 120_000, true, listOf("Resume", "Reset")), now)!!
+        assertEquals(State.PAUSED, t.state)
+        assertEquals(120_000, t.pausedRemainingMs)
+    }
+
+    @Test fun countUpIsNotATimer() {
+        assertNull(TimerParser.parse(f(now - 60_000, false, listOf("Pause")), now))
+    }
+}
+
+class MetricStyleTimerTest {
+    private val now = 1_795_648_379_845L
+    private fun f(ends: Long?, paused: Long?, label: String? = "Timer") = TimerParser.Fields(
+        "com.google.android.deskclock", true, 1_795_648_289_838L, false, false, null, null,
+        listOf("Pause", "Add 1 min"), null, metricTimer = true, metricEndsAt = ends, metricPausedMs = paused, metricLabel = label)
+
+    @Test fun running() {
+        val t = TimerParser.parse(f(now + 210_000, null), now)!!
+        assertEquals(State.RUNNING, t.state)
+        assertEquals(210_000, t.remainingMs(now))
+        assertNull(t.label) // "Timer" isn't a useful label
+    }
+
+    @Test fun paused() {
+        val t = TimerParser.parse(f(null, 95_000, "Pasta"), now)!!
+        assertEquals(State.PAUSED, t.state)
+        assertEquals(95_000, t.pausedRemainingMs)
+        assertEquals("Pasta", t.label)
+    }
+
+    @Test fun ringing() {
+        assertEquals(State.RINGING, TimerParser.parse(f(now - 5_000, null), now)!!.state)
+    }
+}

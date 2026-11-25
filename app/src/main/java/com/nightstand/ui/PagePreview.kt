@@ -45,6 +45,8 @@ object PagePreview {
      */
     suspend fun render(c: Context, id: String, night: Boolean): ImageBitmap = try {
         renderUnsafe(c, id, night)
+    } catch (e: kotlinx.coroutines.CancellationException) {
+        throw e // tab switched while drawing: not an error
     } catch (t: Throwable) {
         WatcherService.log("preview $id failed: $t")
         placeholder()
