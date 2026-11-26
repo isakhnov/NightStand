@@ -89,8 +89,9 @@ object ClockOverlay {
             val deg = (at.get(Calendar.HOUR) + at.get(Calendar.MINUTE) / 60f) * 30f
             val rad = Math.toRadians(deg.toDouble())
             val br = r * 0.94f // on the tick ring, clear of the numerals
-            Glyphs.bell(c, cx + (sin(rad) * br).toFloat(), cy - (cos(rad) * br).toFloat(), r * 0.095f,
-                if (a.expected) p.secondary else p.primary)
+            val col = if (a.expected) p.secondary else p.primary
+            drawAlarmHand(c, cx, cy, r, rad, a.triggerAt - x.now, col)
+            Glyphs.bell(c, cx + (sin(rad) * br).toFloat(), cy - (cos(rad) * br).toFloat(), r * 0.095f, col)
         }
 
         // Readout, opposite the hour hand.
@@ -121,6 +122,32 @@ object ClockOverlay {
             c.drawText(text, left + glyph * 1.25f, y, paint)
         }
     }
+
+    private val dot = Paint(Paint.ANTI_ALIAS_FLAG)
+
+    /**
+     * Dotted "alarm hand" from the hub to the bell, under the real hands, so the
+     * alarm reads at a glance. Dense dots: rings within 12 h (this turn of the
+     * dial). Sparse dots: 12–24 h away (the bell sits at the same spot, one turn
+     * later). Spacing/size come from [alarmHandDots] (unit-tested).
+     */
+    private fun drawAlarmHand(c: Canvas, cx: Float, cy: Float, r: Float, rad: Double, untilMs: Long, color: Int) {
+        val (gap, radius) = alarmHandDots(untilMs)
+        dot.color = color
+        dot.alpha = (android.graphics.Color.alpha(color) * 0.75f).toInt()
+        val sx = sin(rad).toFloat(); val sy = -cos(rad).toFloat()
+        var d = r * 0.13f // start clear of the hub
+        val end = r * 0.85f // stop short of the bell
+        while (d <= end) {
+            c.drawCircle(cx + sx * d, cy + sy * d, r * radius, dot)
+            d += r * gap
+        }
+    }
+
+    /** (gap, dot radius) as fractions of the dial radius. */
+    fun alarmHandDots(untilMs: Long): Pair<Float, Float> =
+        if (untilMs <= 12 * 3_600_000L) 0.045f to 0.013f // dense: within 12 h
+        else 0.12f to 0.015f                             // sparse: 12–24 h
 
     fun timerText(tm: RunningTimer, now: Long) =
         if (tm.state == RunningTimer.State.RINGING) "Time's up" else formatCountdown(tm.remainingMs(now))
