@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<title>Nightstand · Photos Step A mockups</title>
+<!-- Mockups for docs/photos-intelligence/step-a/STRATEGY.md. All photos are generated placeholders (SVG).
+     ?only=a-day|a-night|b|c|d renders one screen (landscape 915x412 or phone 412x915) for the PNGs;
+     no param = overview. -->
+<style>
+:root{--bg:#000;--surf:#121214;--surf2:#1c1c1f;--surf3:#26262a;--on:#f2f2f5;--muted:#9a9aa2;--line:#2c2c31;--acc:#ff9f0a;--accbg:#3a2a10;--ok:#34c759;--okbg:#14301c;--warn:#ffb340;--warnbg:#2a1f0c;--bad:#ff6961;--red:#ff1a1a}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#2b2b30;font-family:"Roboto","Inter","Helvetica Neue",Arial,sans-serif;color:var(--on);padding:28px;display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap;width:1900px}
+body.only{padding:0;background:#000;width:auto}
+body.only .caption{display:none}
+body.only .phone,body.only .land{border-radius:0;box-shadow:none}
+.phone{width:412px;height:915px;background:var(--bg);border-radius:34px;overflow:hidden;position:relative;flex:none;box-shadow:0 10px 40px #0008}
+.land{width:915px;height:412px;background:#000;border-radius:30px;overflow:hidden;position:relative;flex:none;box-shadow:0 10px 40px #0008}
+.status{height:34px;display:flex;justify-content:space-between;align-items:center;padding:0 22px;font-size:13px;font-weight:600}
+.top{padding:10px 20px 14px}
+.top h1{font-size:30px;font-weight:800;letter-spacing:-.3px}
+.top .sub{font-size:13px;color:var(--muted);margin-top:2px}
+.bar{display:flex;align-items:center;gap:10px;padding:6px 10px 10px 8px;height:56px}
+.bar .ib{width:44px;height:44px;border-radius:22px;display:flex;align-items:center;justify-content:center;flex:none}
+.bar .ib svg{width:24px;height:24px;fill:none;stroke:var(--on);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.bar .tt{flex:1;min-width:0}
+.bar .tt b{font-size:20px;font-weight:700;display:block}
+.bar .tt span{font-size:13px;color:var(--muted)}
+.content{padding:0 14px}
+.card{background:var(--surf);border-radius:22px;padding:16px;margin-bottom:12px}
+.sec{font-size:12px;font-weight:700;letter-spacing:.8px;color:var(--muted);text-transform:uppercase;margin:16px 2px 8px}
+.row{display:flex;align-items:center;gap:12px;padding:11px 2px;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:none}
+.row .t{flex:1;min-width:0}
+.row .t b{display:block;font-size:16px;font-weight:600}
+.row .t span{display:block;font-size:13px;color:var(--muted);margin-top:2px;line-height:1.35}
+.sw{width:52px;height:32px;border-radius:16px;background:var(--acc);position:relative;flex:none}
+.sw:after{content:"";position:absolute;right:4px;top:4px;width:24px;height:24px;border-radius:50%;background:#1a1205}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:24px;font-weight:700;font-size:15px;padding:12px 20px}
+.btn.fill{background:var(--acc);color:#1a1205}
+.btn.tonal{background:var(--accbg);color:var(--acc)}
+.btn.out{border:1.5px solid #4a4a50;color:var(--on)}
+.btn.txt{color:var(--acc);padding:10px 12px}
+.btn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.seg{display:flex;background:var(--surf2);border-radius:14px;padding:4px;gap:4px}
+.seg div{flex:1;text-align:center;padding:9px 0;border-radius:10px;font-size:14px;font-weight:600;color:var(--muted)}
+.seg div.on{background:var(--surf3);color:var(--on)}
+.nav{position:absolute;left:0;right:0;bottom:0;height:84px;background:var(--surf);display:flex;justify-content:space-around;align-items:flex-start;padding-top:10px}
+.nav div{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;color:var(--muted);font-weight:600;width:76px;position:relative}
+.nav .ic{width:60px;height:32px;border-radius:16px;display:flex;align-items:center;justify-content:center}
+.nav .on{color:var(--on)} .nav .on .ic{background:var(--accbg)}
+.nav svg{width:22px;height:22px;fill:var(--muted)}
+.nav .on svg{fill:var(--acc)}
+.ph{display:block;overflow:hidden;border-radius:12px;background:#111;flex:none}
+.ph svg{display:block;width:100%;height:100%}
+.pill{font-size:12px;font-weight:700;padding:3px 9px;border-radius:10px;white-space:nowrap}
+.pill.ok{background:var(--okbg);color:var(--ok)} .pill.w{background:var(--warnbg);color:var(--warn)} .pill.m{background:var(--surf3);color:var(--muted)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1.5px solid #4a4a50;border-radius:10px;padding:7px 12px;font-size:14px;font-weight:600}
+.chip.on{background:var(--accbg);border-color:var(--acc);color:var(--acc)}
+.caption{font-size:15px;color:#d8d8de;font-weight:700;margin:0 0 10px 8px}
+.col{display:flex;flex-direction:column}
+.muted{color:var(--muted)}
+.gear svg{width:24px;height:24px;fill:var(--acc)}
+/* display */
+.clock{position:absolute;left:14px;top:14px;width:384px;height:384px}
+.pane{position:absolute;left:428px;top:14px;width:473px;height:384px;border-radius:22px;overflow:hidden}
+.pane .ph{width:100%;height:100%;border-radius:0}
+.toast{position:absolute;display:flex;align-items:center;gap:14px;border-radius:20px;padding:10px 10px 10px 16px;font-size:15px;font-weight:600;white-space:nowrap}
+.toast .u{font-weight:800;padding:6px 12px;border-radius:14px}
+.touch{position:absolute;width:46px;height:46px;border-radius:50%;background:#ffffff38;border:2px solid #ffffff70}
+.trail{position:absolute;width:6px;border-radius:3px;background:linear-gradient(#ffffff00,#ffffff55)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.tile{position:relative;aspect-ratio:1/1;border-radius:12px;overflow:hidden}
+.tile .ph{width:100%;height:100%;border-radius:0}
+.tile .badge{position:absolute;left:6px;bottom:6px;font-size:10.5px;font-weight:700;padding:2px 6px;border-radius:7px;background:#000b;color:#fff}
+.tile .sel{position:absolute;right:6px;top:6px;width:22px;height:22px;border-radius:50%;border:2px solid #fff;background:#0006}
+.tile.on{outline:3px solid var(--acc);outline-offset:-3px}
+.tile.on .sel{background:var(--acc);border-color:var(--acc)}
+.tile.on .sel:after{content:"";position:absolute;left:6px;top:2px;width:5px;height:10px;border:solid #1a1205;border-width:0 2.5px 2.5px 0;transform:rotate(45deg)}
+.why{position:absolute;right:22px;top:22px;width:300px;background:#000d;border:1px solid #ffffff22;border-radius:18px;padding:14px 16px;font-size:12.5px;line-height:1.5;backdrop-filter:blur(6px)}
+.why h4{font-size:14px;font-weight:800;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+.why .k{display:flex;justify-content:space-between;gap:10px}
+.why .k span:first-child{color:var(--muted)}
+.why .bar2{height:6px;border-radius:3px;background:var(--surf3);overflow:hidden;margin:4px 0 8px}
+.why .bar2 i{display:block;height:100%}
+.why hr{border:none;border-top:1px solid #ffffff1c;margin:7px 0}
+</style></head><body>
+
+<svg width="0" height="0" style="position:absolute">
+ <defs>
+  <!-- night: luminance to red only, like Palette.nightImageFilter(0.8f) -->
+  <filter id="nightred" color-interpolation-filters="sRGB">
+   <feColorMatrix type="matrix" values="0.24 0.47 0.09 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0"/>
+  </filter>
+ </defs>
+</svg>
+
+<!-- ============ (a) DAY: mid swipe-out ============ -->
+<div class="col" data-s="a-day"><div class="caption">a · Swipe down on the photo to hide it (day)</div>
+<div class="land">
+ <div class="clock" data-clock="day"></div>
+ <div class="pane">
+  <span class="ph" data-ph="beach"></span>
+  <!-- the outgoing photo: follows the finger down, shrinks, tilts, fades -->
+  <div style="position:absolute;left:0;top:0;width:100%;height:100%;transform:translate(22px,215px) rotate(5deg) scale(.8);transform-origin:50% 0;opacity:.92;border-radius:22px;overflow:hidden;box-shadow:0 18px 40px #000a">
+   <span class="ph" style="width:100%;height:100%;border-radius:0" data-ph="parking"></span>
+  </div>
+  <div class="toast" style="left:50%;transform:translateX(-50%);top:14px;background:#1c1c1fee;color:var(--on);box-shadow:0 6px 20px #0009">
+   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ff9f0a" stroke-width="2.4" stroke-linecap="round"><path d="M3 3l18 18M10.6 5.1A10 10 0 0 1 12 5c6 0 9.5 7 9.5 7a17 17 0 0 1-2.6 3.4M6.6 6.6C4 8.4 2.5 12 2.5 12S6 19 12 19a9.5 9.5 0 0 0 5.4-1.6"/></svg>
+   Hidden · similar photos won't show <span class="u" style="background:var(--accbg);color:var(--acc)">Undo</span>
+  </div>
+ </div>
+ <div class="trail" style="left:690px;top:150px;height:120px"></div>
+ <div class="touch" style="left:670px;top:262px"></div>
+ <!-- page dots, as drawn by PageContainer while the overlay is up -->
+ <div style="position:absolute;left:0;right:0;bottom:6px;display:flex;justify-content:center;gap:7px">
+  <i style="width:7px;height:7px;border-radius:50%;background:#fff5"></i><i style="width:7px;height:7px;border-radius:50%;background:#fff5"></i><i style="width:7px;height:7px;border-radius:50%;background:#fff5"></i><i style="width:7px;height:7px;border-radius:50%;background:#fff"></i><i style="width:7px;height:7px;border-radius:50%;background:#fff5"></i>
+ </div>
+</div></div>
+
+<!-- ============ (a) NIGHT ============ -->
+<div class="col" data-s="a-night"><div class="caption">a · Same at night: red, dim, still · toast stays 10 s</div>
+<div class="land">
+ <div class="clock" data-clock="night"></div>
+ <div class="pane" style="filter:url(#nightred) brightness(.8)">
+  <span class="ph" data-ph="mountain"></span>
+  <div style="position:absolute;left:0;top:0;width:100%;height:100%;transform:translate(14px,215px) rotate(4deg) scale(.8);transform-origin:50% 0;opacity:.8;border-radius:22px;overflow:hidden">
+   <span class="ph" style="width:100%;height:100%;border-radius:0" data-ph="panel"></span>
+  </div>
+ </div>
+ <div class="toast" style="left:664px;transform:translateX(-50%);top:28px;background:#000;border:1.5px solid #7a0000;color:#d00000">
+  Hidden · similar photos won't show <span class="u" style="border:1.5px solid #d00000;color:#ff1a1a">Undo</span>
+ </div>
+</div></div>
+
+<!-- ============ (b) SETTINGS: Views → Photos ⚙ ============ -->
+<div class="col" data-s="b"><div class="caption">b · Views → Photos ⚙ · Smart selection</div>
+<div class="phone">
+ <div class="status"><span>08:06</span><span>⚡ 100%</span></div>
+ <div class="top"><h1>Views</h1><div class="sub">Order and options · swipe between them on the stand</div></div>
+ <div class="content">
+  <div class="card" style="padding:12px 14px 14px;background:var(--surf2)">
+   <div style="display:flex;align-items:center;gap:12px">
+    <span class="ph" style="width:92px;height:44px;border-radius:10px" data-ph="beach"></span>
+    <div style="flex:1;min-width:0"><b style="font-size:16px;display:block">Clock + photos</b><span style="font-size:12.5px;color:var(--muted)">All photos · smart</span></div>
+    <span class="gear"><svg viewBox="0 0 24 24"><path d="M19.1 12.9a7 7 0 0 0 0-1.8l2-1.6-2-3.4-2.4 1a7 7 0 0 0-1.6-.9L14.8 3h-4l-.4 2.6a7 7 0 0 0-1.5.9l-2.4-1-2 3.4 2 1.6a7 7 0 0 0 0 1.8l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 1.5.9l.4 2.6h4l.4-2.6a7 7 0 0 0 1.5-.9l2.4 1 2-3.4zM12.8 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg></span>
+    <div class="sw"></div>
+   </div>
+   <div class="sec">Source</div>
+   <div class="chips"><div class="chip on">All photos</div><div class="chip">Favorites</div><div class="chip">Album</div></div>
+
+   <div class="sec" style="margin-top:18px">Smart selection</div>
+   <div class="seg"><div>Off</div><div class="on">Smart</div></div>
+   <div style="background:var(--surf);border-radius:16px;padding:12px 14px;margin-top:10px">
+    <div style="display:flex;align-items:center;gap:8px"><span class="pill ok">Learning</span><b style="font-size:15px">Learning from 23 swipes</b></div>
+    <div style="font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.4">1,284 photos checked · 212 skipped as utility shots · 96 duplicates folded · runs only on the charger</div>
+   </div>
+   <div style="margin-top:4px">
+    <div class="row"><div class="t"><b>Show one per burst</b><span>Only the best of photos taken seconds apart</span></div><div class="sw"></div></div>
+    <div class="row"><div class="t"><b>Hidden photos</b><span>23 you swiped away · 61 look-alikes</span></div>
+     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9a9aa2" stroke-width="2.2" stroke-linecap="round"><path d="M9 5l7 7-7 7"/></svg></div>
+    <div class="row"><div class="t"><b style="color:var(--bad)">Reset learning</b><span>Forget swipes and restore every hidden photo</span></div></div>
+   </div>
+   <div style="font-size:12.5px;color:var(--muted);line-height:1.45;margin-top:8px">On the stand, <b style="color:var(--on)">swipe down on a photo</b> to hide it and similar ones. Everything is worked out on this phone; nothing is uploaded. At night photos turn red, stop moving and change every 10 minutes.</div>
+  </div>
+ </div>
+ <div class="nav" data-on="1"></div>
+</div></div>
+
+<!-- ============ (c) HIDDEN PHOTOS ============ -->
+<div class="col" data-s="c"><div class="caption">c · Hidden photos · review and restore</div>
+<div class="phone">
+ <div class="status"><span>08:07</span><span>⚡ 100%</span></div>
+ <div class="bar">
+  <div class="ib"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></div>
+  <div class="tt"><b>Hidden photos</b><span>Never shown on the stand</span></div>
+ </div>
+ <div class="content">
+  <div class="seg" style="margin:0 2px 12px"><div class="on">You hid · 23</div><div>Look-alikes · 61</div><div>Bursts · 96</div></div>
+  <div class="grid">
+   <div class="tile"><span class="ph" data-ph="parking"></span><span class="badge">Nov 24</span><span class="sel"></span></div>
+   <div class="tile"><span class="ph" data-ph="panel"></span><span class="badge">Nov 20</span><span class="sel"></span></div>
+   <div class="tile"><span class="ph" data-ph="target"></span><span class="badge">Nov 18</span><span class="sel"></span></div>
+   <div class="tile on"><span class="ph" data-ph="car"></span><span class="badge">Nov 12</span><span class="sel"></span></div>
+   <div class="tile"><span class="ph" data-ph="receipt"></span><span class="badge">Nov 9</span><span class="sel"></span></div>
+   <div class="tile"><span class="ph" data-ph="parking2"></span><span class="badge">Oct 30</span><span class="sel"></span></div>
+   <div class="tile"><span class="ph" data-ph="target2"></span><span class="badge">Oct 27</span><span class="sel"></span></div>
+   <div class="tile"><span class="ph" data-ph="panel"></span><span class="badge">Oct 21</span><span class="sel"></span></div>
+   <div class="tile"><span class="ph" data-ph="receipt"></span><span class="badge">Oct 2</span><span class="sel"></span></div>
+   <div class="tile"><span class="ph" data-ph="screen"></span><span class="badge">Sep 14</span><span class="sel"></span></div>
+   <div class="tile"><span class="ph" data-ph="target"></span><span class="badge">Aug 30</span><span class="sel"></span></div>
+   <div class="tile"><span class="ph" data-ph="parking"></span><span class="badge">Aug 3</span><span class="sel"></span></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;background:var(--surf);border-radius:16px;padding:10px 12px;margin-top:12px">
+   <span class="ph" style="width:44px;height:44px;border-radius:10px" data-ph="car"></span>
+   <div style="flex:1;font-size:12.5px;line-height:1.4"><b style="font-size:14px">Swiped away Nov 12, 22:41</b><br><span class="muted">Also hid 4 look-alikes · burst of 3</span></div>
+  </div>
+ </div>
+ <div style="position:absolute;left:0;right:0;bottom:0;padding:12px 16px 20px;background:var(--surf);display:flex;align-items:center;gap:12px">
+  <div style="flex:1;font-size:13px;color:var(--muted);line-height:1.35"><b style="color:var(--on);font-size:15px">1 selected</b><br>Restoring teaches it you like these</div>
+  <div class="btn fill"><svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>Restore</div>
+ </div>
+</div></div>
+
+<!-- ============ (d) WHY IS THIS SHOWN ============ -->
+<div class="col" data-s="d"><div class="caption">d · Debug concept: "Why is this shown?" (Debug tab → Show reasons on the stand)</div>
+<div class="land">
+ <div class="clock" data-clock="day"></div>
+ <div class="pane"><span class="ph" data-ph="family"></span></div>
+ <div class="why">
+  <h4>Why this photo <span class="pill ok">show 0.91</span></h4>
+  <div class="k"><span>Zero-shot (prompts)</span><span>+2.4</span></div>
+  <div style="color:var(--muted);font-size:11.5px">family group 0.71 · friends 0.22 · screenshot 0.01</div>
+  <div class="bar2"><i style="width:78%;background:var(--ok)"></i></div>
+  <div class="k"><span>Your swipes (head, n = 23)</span><span>−0.3</span></div>
+  <div class="k"><span>Nearest hidden photo</span><span>cos 0.41 · none</span></div>
+  <hr>
+  <div class="k"><span>Burst</span><span>best of 4 · sharpest</span></div>
+  <div class="k"><span>Timeliness</span><span>on this day 2019 · ×2</span></div>
+  <div class="k"><span>Shown before</span><span>2× · last Oct 3</span></div>
+  <hr>
+  <div class="k"><span>Embedded</span><span>38 ms · cached since Nov 21</span></div>
+  <div style="color:var(--muted);font-size:11px;margin-top:4px">Camera · Nov 26 2019 · MobileCLIP-S0 w8 · prompts v1</div>
+ </div>
+</div></div>
+
+<script>
+// ---- generated placeholder "photos" (no real images); same set as step-b/mockup.html + a few ----
+const P={
+ family:`<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6a96b"/><stop offset=".6" stop-color="#d9647a"/><stop offset="1" stop-color="#3b2a4a"/></linearGradient></defs><rect width="400" height="300" fill="url(#g)"/><circle cx="300" cy="110" r="36" fill="#ffd9a0" opacity=".8"/><rect y="230" width="400" height="70" fill="#2a1d33"/>
+  <g fill="#1d1426"><circle cx="140" cy="150" r="22"/><rect x="112" y="174" width="56" height="90" rx="22"/><circle cx="200" cy="168" r="17"/><rect x="179" y="187" width="42" height="74" rx="18"/><circle cx="252" cy="146" r="23"/><rect x="223" y="171" width="58" height="95" rx="23"/></g>`,
+ mountain:`<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7fb3e6"/><stop offset="1" stop-color="#d7ecff"/></linearGradient></defs><rect width="400" height="300" fill="url(#g)"/><polygon points="0,220 110,90 190,190 260,70 400,210 400,300 0,300" fill="#4d6a8a"/><polygon points="260,70 290,110 270,105 250,118 235,100" fill="#fff"/><polygon points="0,240 150,170 300,230 400,200 400,300 0,300" fill="#2f5a46"/><rect y="262" width="400" height="38" fill="#3f7fa8" opacity=".8"/>`,
+ car:`<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#253447"/><stop offset=".62" stop-color="#5d6f86"/><stop offset=".62" stop-color="#2b2b2f"/><stop offset="1" stop-color="#18181b"/></linearGradient></defs><rect width="400" height="300" fill="url(#g)"/>
+  <path d="M60 205 L80 168 Q95 150 130 145 L175 120 Q200 110 245 112 L290 140 Q335 146 345 170 L350 205 Z" fill="#d1342f"/><path d="M182 128 L240 122 L270 142 L170 146 Z" fill="#9fc3e0" opacity=".8"/><circle cx="120" cy="208" r="25" fill="#111"/><circle cx="120" cy="208" r="11" fill="#999"/><circle cx="295" cy="208" r="25" fill="#111"/><circle cx="295" cy="208" r="11" fill="#999"/>`,
+ beach:`<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb36b"/><stop offset=".5" stop-color="#ff7d6b"/><stop offset=".5" stop-color="#2d8bb0"/><stop offset=".78" stop-color="#1f6a8c"/><stop offset=".78" stop-color="#e8c98e"/><stop offset="1" stop-color="#d4ad6c"/></linearGradient></defs><rect width="400" height="300" fill="url(#g)"/><circle cx="200" cy="150" r="40" fill="#ffe2a0"/><path d="M60 235 Q70 170 40 120" stroke="#3b2a1a" stroke-width="7" fill="none"/><path d="M40 120 q-30 5 -45 25 M40 120 q30 -10 50 5 M40 120 q-10 -25 -35 -30" stroke="#24502c" stroke-width="10" fill="none" stroke-linecap="round"/>`,
+ receipt:`<rect width="400" height="300" fill="#6d5a48"/><g transform="rotate(-8 200 150)"><rect x="140" y="20" width="130" height="270" fill="#f4f1ea"/><g fill="#9a958c"><rect x="160" y="45" width="90" height="8"/><rect x="160" y="75" width="70" height="5"/><rect x="160" y="90" width="85" height="5"/><rect x="160" y="105" width="60" height="5"/><rect x="160" y="120" width="80" height="5"/><rect x="160" y="135" width="75" height="5"/><rect x="160" y="170" width="90" height="7"/><rect x="160" y="200" width="50" height="5"/></g></g>`,
+ panel:`<rect width="400" height="300" fill="#8a8f94"/><rect x="100" y="25" width="200" height="255" rx="6" fill="#c9ccd0" stroke="#666" stroke-width="3"/><g fill="#2c2c30">${Array.from({length:8},(_,i)=>`<rect x="125" y="${45+i*28}" width="60" height="18" rx="2"/><rect x="215" y="${45+i*28}" width="60" height="18" rx="2"/>`).join('')}</g><path d="M200 30 V270" stroke="#555" stroke-width="4"/><path d="M60 300 Q90 200 110 150 M30 300 Q80 220 105 200" stroke="#c0392b" stroke-width="5" fill="none"/>`,
+ target:`<rect width="400" height="300" fill="#8a6a45"/><rect x="110" y="20" width="180" height="260" fill="#efe8d8"/><g fill="none" stroke="#222" stroke-width="3"><circle cx="200" cy="140" r="80"/><circle cx="200" cy="140" r="58"/><circle cx="200" cy="140" r="36"/></g><circle cx="200" cy="140" r="15" fill="#222"/><g fill="#111"><circle cx="190" cy="132" r="4"/><circle cx="214" cy="150" r="4"/><circle cx="230" cy="110" r="4"/><circle cx="172" cy="165" r="4"/></g>`,
+ target2:`<rect width="400" height="300" fill="#5d6b4a"/><rect x="95" y="30" width="210" height="240" fill="#f3efe3" transform="rotate(4 200 150)"/><g fill="none" stroke="#b3261e" stroke-width="4"><circle cx="200" cy="150" r="70"/><circle cx="200" cy="150" r="45"/></g><circle cx="200" cy="150" r="20" fill="#b3261e"/><g fill="#111"><circle cx="186" cy="140" r="4"/><circle cx="222" cy="160" r="4"/><circle cx="205" cy="118" r="4"/></g>`,
+ parking:`<rect width="400" height="300" fill="#6f7276"/><rect x="0" y="230" width="400" height="70" fill="#4a4c50"/><rect x="150" y="10" width="110" height="250" fill="#b4b6b9"/><rect x="160" y="60" width="90" height="90" fill="#f2c200"/><text x="205" y="122" font-size="48" font-weight="900" text-anchor="middle" fill="#1b1b1b" font-family="Arial">B2</text><text x="205" y="195" font-size="34" font-weight="800" text-anchor="middle" fill="#333" font-family="Arial">14</text><path d="M0 270 L120 240" stroke="#eee" stroke-width="5"/>`,
+ parking2:`<rect width="400" height="300" fill="#585b60"/><rect x="0" y="220" width="400" height="80" fill="#3c3e42"/><rect x="120" y="20" width="150" height="220" fill="#9fa3a8"/><rect x="135" y="50" width="120" height="70" fill="#2b6cb0"/><text x="195" y="100" font-size="40" font-weight="900" text-anchor="middle" fill="#fff" font-family="Arial">P3</text><text x="195" y="190" font-size="40" font-weight="800" text-anchor="middle" fill="#222" font-family="Arial">C-07</text>`,
+ screen:`<rect width="400" height="300" fill="#2a2d33"/><rect x="60" y="30" width="280" height="190" rx="8" fill="#0d1117" stroke="#555" stroke-width="6"/><g fill="#58a6ff"><rect x="80" y="55" width="140" height="8"/><rect x="80" y="75" width="200" height="6" fill="#8b949e"/><rect x="80" y="90" width="170" height="6" fill="#8b949e"/><rect x="80" y="105" width="190" height="6" fill="#8b949e"/><rect x="80" y="130" width="120" height="8"/></g><rect x="170" y="220" width="60" height="40" fill="#444"/><rect x="130" y="258" width="140" height="10" rx="4" fill="#444"/>`
+};
+let n=0;
+document.querySelectorAll('[data-ph]').forEach(el=>{const k=el.dataset.ph;n++;
+ el.innerHTML=`<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">${P[k].replaceAll('id="g"',`id="g${n}"`).replaceAll('url(#g)',`url(#g${n})`)}</svg>`});
+
+// ---- analog clock, as AnalogClock.kt draws it (numbers, minute ticks, orange second hand by day) ----
+function clock(night){
+ const c=192,r=184,fg=night?'#ff1a1a':'#f4f4f6',dim=night?'#a00000':'#8a8a90',sec=night?'#ff1a1a':'#ff9f0a';
+ let s=`<svg viewBox="0 0 384 384" width="384" height="384">`;
+ for(let i=0;i<60;i++){const a=i*Math.PI/30,big=i%5==0,r1=r-(big?(i%15==0?16:12):7);
+  s+=`<line x1="${c+Math.sin(a)*r1}" y1="${c-Math.cos(a)*r1}" x2="${c+Math.sin(a)*r}" y2="${c-Math.cos(a)*r}" stroke="${big?fg:dim}" stroke-width="${big?3.4:2}" stroke-linecap="round"/>`}
+ for(let h=1;h<=12;h++){const a=h*Math.PI/6,rr=r-52;
+  s+=`<text x="${c+Math.sin(a)*rr}" y="${c-Math.cos(a)*rr+15}" font-size="42" font-weight="800" text-anchor="middle" fill="${fg}" font-family="Roboto,Arial">${h}</text>`}
+ const hand=(ang,len,w,col)=>`<line x1="${c}" y1="${c}" x2="${c+Math.sin(ang)*len}" y2="${c-Math.cos(ang)*len}" stroke="${col}" stroke-width="${w}" stroke-linecap="round"/>`;
+ const H=1,M=52,S=38;
+ s+=hand((H+M/60)*Math.PI/6,104,12,fg)+hand(M*Math.PI/30,150,11,fg);
+ s+=hand(S*Math.PI/30,160,2.2,sec)+`<circle cx="${c}" cy="${c}" r="8" fill="#000" stroke="${night?fg:sec}" stroke-width="3"/>`;
+ return s+'</svg>'}
+document.querySelectorAll('[data-clock]').forEach(el=>el.innerHTML=clock(el.dataset.clock==='night'));
+
+// ---- bottom nav ----
+const items=[["Home",'<path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>'],
+["Views",'<path d="M3 13h2v-2H3zm0 4h2v-2H3zm0-8h2V7H3zm4 4h14v-2H7zm0 4h14v-2H7zM7 7v2h14V7z"/>'],
+["Look",'<path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75z"/>'],
+["Setup",'<path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8z"/>'],
+["Debug",'<path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/>']];
+document.querySelectorAll('.nav').forEach(nv=>{const on=+nv.dataset.on;
+ nv.innerHTML=items.map((it,i)=>`<div class="${i==on?'on':''}"><span class="ic"><svg viewBox="0 0 24 24">${it[1]}</svg></span>${it[0]}</div>`).join('')});
+
+// ---- single-screen mode for PNG export ----
+const only=new URLSearchParams(location.search).get('only');
+if(only){document.body.classList.add('only');document.querySelectorAll('[data-s]').forEach(c=>{if(c.dataset.s!==only)c.remove()})}
+</script>
+</body></html>

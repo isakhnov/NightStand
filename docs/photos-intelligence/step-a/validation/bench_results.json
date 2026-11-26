@@ -1,0 +1,50 @@
+{
+ "fp32": {
+  "1thr": {
+   "min": 45.3,
+   "median": 47.1,
+   "load_ms": 180
+  },
+  "4thr": {
+   "min": 44.7,
+   "median": 95.2,
+   "load_ms": 84
+  }
+ },
+ "xenova_int8": {
+  "1thr": {
+   "min": 110.5,
+   "median": 113.4,
+   "load_ms": 85
+  },
+  "4thr": {
+   "min": 98.0,
+   "median": 182.2,
+   "load_ms": 119
+  }
+ },
+ "fp16": {
+  "1thr": {
+   "min": 58.3,
+   "median": 60.6,
+   "load_ms": 193
+  },
+  "4thr": {
+   "min": 38.6,
+   "median": 105.7,
+   "load_ms": 184
+  }
+ },
+ "w8_partial": {
+  "1thr": {
+   "min": 49.7,
+   "median": 52.1,
+   "load_ms": 72
+  },
+  "4thr": {
+   "min": 46.1,
+   "median": 110.0,
+   "load_ms": 136
+  }
+ }
+}

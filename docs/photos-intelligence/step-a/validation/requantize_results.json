@@ -1,0 +1,47 @@
+{
+ "w8_replaced_tensors": 100,
+ "w8_big_replaced_tensors": 50,
+ "xenova_int8_dynamic": {
+  "size_MB": 11.8,
+  "cos_vs_fp32_min": -0.0709,
+  "cos_vs_fp32_mean": 0.1066,
+  "top1_agree": "0/20",
+  "median_ms_4thr": 227.0,
+  "median_ms_1thr": 113.9
+ },
+ "weight_only_int8": {
+  "size_MB": 11.9,
+  "cos_vs_fp32_min": 0.9067,
+  "cos_vs_fp32_mean": 0.9526,
+  "top1_agree": "19/20",
+  "median_ms_4thr": 183.9,
+  "median_ms_1thr": 101.9
+ },
+ "weight_only_int8_big_nondepthwise": {
+  "size_MB": 12.9,
+  "cos_vs_fp32_min": 0.9848,
+  "cos_vs_fp32_mean": 0.9934,
+  "top1_agree": "20/20",
+  "median_ms_4thr": 102.6,
+  "median_ms_1thr": 50.2
+ },
+ "fp16": {
+  "size_MB": 22.9,
+  "cos_vs_fp32_min": 0.9999,
+  "cos_vs_fp32_mean": 1.0,
+  "top1_agree": "20/20",
+  "median_ms_4thr": 116.1,
+  "median_ms_1thr": 61.7
+ },
+ "static_qdq_synthetic_calib": {
+  "size_MB": 12.4,
+  "cos_vs_fp32_min": 0.0021,
+  "cos_vs_fp32_mean": 0.156,
+  "top1_agree": "2/20",
+  "median_ms_4thr": 104.6,
+  "median_ms_1thr": 99.2
+ },
+ "fp32": {
+  "size_MB": 45.5
+ }
+}

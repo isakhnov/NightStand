@@ -1,0 +1,12 @@
+== vision_model_quantized.onnx  (11.8 MB)
+   in : pixel_values     ['batch_size', 3, 256, 256] tensor(float)
+   out: image_embeds     ['batch_size', 512] tensor(float)
+   opset/producer: onnx.quantize 9223372036854775807
+== vision_model.onnx  (45.5 MB)
+   in : pixel_values     ['batch_size', 3, 256, 256] tensor(float)
+   out: image_embeds     ['batch_size', 512] tensor(float)
+   opset/producer: pytorch 9223372036854775807
+== text_model.onnx  (169.8 MB)
+   in : input_ids        ['batch_size', 'sequence_length'] tensor(int64)
+   out: text_embeds      ['batch_size', 512] tensor(float)
+   opset/producer: pytorch 9223372036854775807
