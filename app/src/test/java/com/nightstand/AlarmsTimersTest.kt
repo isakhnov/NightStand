@@ -18,7 +18,10 @@ class AlarmsTimersTest {
     @Test fun alarm_clockAppsOnly_within24h() {
         assertNotNull(Alarms.filter(NextAlarm(now + 6 * 3_600_000, samsung), now))
         assertNull(Alarms.filter(NextAlarm(now + 6 * 3_600_000, "com.samsung.android.calendar"), now))
-        assertNull(Alarms.filter(NextAlarm(now + 6 * 3_600_000, null), now))
+        // Ownerless (Google Clock on the S26 reports none): shown unless that time is hidden.
+        val ownerless = NextAlarm(now + 6 * 3_600_000, null)
+        assertNotNull(Alarms.filter(ownerless, now))
+        assertNull(Alarms.filter(ownerless, now, setOf(Alarms.timeKey(ownerless.triggerAt))))
         assertNull(Alarms.filter(NextAlarm(now + 25 * 3_600_000, samsung), now))
         assertNull(Alarms.filter(NextAlarm(now - 1000, samsung), now))
     }
@@ -98,7 +101,8 @@ class AlarmChooseTest {
     private val real = com.nightstand.clock.NextAlarm(now + 14 * 3_600_000, google)          // 7:30 AM
 
     @org.junit.Test fun internalHolderFilteredAndRememberedUsed() {
-        org.junit.Assert.assertEquals(real, com.nightstand.clock.Alarms.choose(bedtime, real, now))
+        val hidden = setOf(com.nightstand.clock.Alarms.timeKey(bedtime.triggerAt)) // user hid the Routine time
+        org.junit.Assert.assertEquals(real, com.nightstand.clock.Alarms.choose(bedtime, real, now, hidden))
     }
 
     @org.junit.Test fun realSystemAlarmWins() {
@@ -107,7 +111,10 @@ class AlarmChooseTest {
     }
 
     @org.junit.Test fun nothingWhenOnlyInternal() {
-        org.junit.Assert.assertNull(com.nightstand.clock.Alarms.choose(bedtime, null, now))
+        val hidden = setOf(com.nightstand.clock.Alarms.timeKey(bedtime.triggerAt))
+        org.junit.Assert.assertNull(com.nightstand.clock.Alarms.choose(bedtime, null, now, hidden))
+        // Not hidden: an ownerless entry is shown (could be Google Clock's own alarm).
+        org.junit.Assert.assertEquals(bedtime, com.nightstand.clock.Alarms.choose(bedtime, null, now))
     }
 }
 

@@ -53,18 +53,19 @@ object Alarms {
         if (!Prefs.showAlarm(c)) return null
         val info = c.getSystemService(AlarmManager::class.java).nextAlarmClock
         val system = info?.let { NextAlarm(it.triggerTime, it.showIntent?.creatorPackage) }
+        val hidden = Prefs.hiddenAlarmTimes(c)
         val patterns = observe(c, system, now)
-        val chosen = choose(system, AlarmMemory.get(c, now), now)
+        val chosen = choose(system, AlarmMemory.get(c, now), now, hidden)
         if (chosen != null || !Prefs.rememberAlarms(c)) return chosen
         // Slot held by an internal entry (Routines/Bedtime): show the learned alarm as "expected".
-        val holder = system?.takeIf { it.sourcePkg !in ClockApps.PACKAGES }?.triggerAt
+        val holder = system?.takeIf { !accepted(it, hidden) }?.triggerAt
         return AlarmPatterns.expected(patterns, now, WINDOW_MS, holder)
     }
 
     /** Learn from what Android reports and drop contradicted patterns. */
     fun observe(c: Context, system: NextAlarm?, now: Long = System.currentTimeMillis()): List<AlarmPatterns.Pattern> {
         var list = AlarmPatterns.load(c)
-        if (system != null && system.sourcePkg in ClockApps.PACKAGES && system.triggerAt > now) {
+        if (system != null && accepted(system, Prefs.hiddenAlarmTimes(c)) && system.triggerAt > now) {
             list = AlarmPatterns.record(list, system, now)
         }
         val pruned = AlarmPatterns.prune(list, system?.triggerAt, now)
@@ -78,14 +79,32 @@ object Alarms {
      * remembered from the clock app's own "Upcoming alarm" notification is
      * used. A real clock alarm reported by Android always wins. Pure; tested.
      */
-    fun choose(system: NextAlarm?, remembered: NextAlarm?, now: Long): NextAlarm? =
-        filter(system, now) ?: filter(remembered, now)
+    fun choose(system: NextAlarm?, remembered: NextAlarm?, now: Long, hidden: Set<String> = emptySet()): NextAlarm? =
+        filter(system, now, hidden) ?: filter(remembered, now, hidden)
+
+    /**
+     * Whose alarms count. On the S26, Google Clock's own alarms carry NO owner
+     * (AlarmClockInfo.showIntent == null) — exactly like Samsung Routines — so
+     * owner alone can't separate them (0.7.x hid the real 7:10 alarm). Rule:
+     * known clock apps always; ownerless entries unless the user hid that time
+     * of day ("Hide alarms at 9:30 PM" in Look); other named apps never.
+     */
+    fun accepted(a: NextAlarm, hidden: Set<String>): Boolean = when (a.sourcePkg) {
+        in ClockApps.PACKAGES -> true
+        null -> timeKey(a.triggerAt) !in hidden
+        else -> false
+    }
+
+    /** "HH:mm" in local time — how a hidden alarm time is stored. */
+    fun timeKey(t: Long): String = java.util.Calendar.getInstance().apply { timeInMillis = t }.let {
+        "%02d:%02d".format(it.get(java.util.Calendar.HOUR_OF_DAY), it.get(java.util.Calendar.MINUTE))
+    }
 
     /** The slot holder if it's an internal alarm we hide (bedtime etc.), else null. */
     fun internalHolder(c: Context, now: Long = System.currentTimeMillis()): NextAlarm? {
         val info = c.getSystemService(AlarmManager::class.java).nextAlarmClock ?: return null
         val a = NextAlarm(info.triggerTime, info.showIntent?.creatorPackage)
-        return if (a.sourcePkg !in ClockApps.PACKAGES && a.triggerAt > now) a else null
+        return if (!accepted(a, Prefs.hiddenAlarmTimes(c)) && a.triggerAt > now) a else null
     }
 
     /**
@@ -101,26 +120,30 @@ object Alarms {
         } ?: "unknown app"
         val time = android.text.format.DateFormat.format(
             if (android.text.format.DateFormat.is24HourFormat(c)) "EEE HH:mm" else "EEE h:mm a", info.triggerTime)
-        val fallback = filter(AlarmMemory.get(c, now), now)
+        val hidden = Prefs.hiddenAlarmTimes(c)
+        val sys = NextAlarm(info.triggerTime, pkg)
+        val ok = accepted(sys, hidden)
+        val fallback = filter(AlarmMemory.get(c, now), now, hidden)
+        val shown = next(c, now)
         val why = when {
-            pkg !in ClockApps.PACKAGES && fallback == null && next(c, now)?.expected == true ->
-                "internal alarm (${pkg ?: "no owner"}) hidden; showing your usual ${alarmLabel(c, next(c, now)!!)} as expected"
-            pkg !in ClockApps.PACKAGES && fallback != null ->
-                "internal alarm (${pkg ?: "no owner"}) hidden; showing ${alarmLabel(c, fallback)} from the clock's notification"
-            pkg == null -> "hidden: set by an app that doesn't identify itself (often a Bedtime/Sleep " +
-                "schedule). It holds Android's single next-alarm slot, so your clock alarm appears once it has passed"
-            pkg !in ClockApps.PACKAGES -> "hidden: not a clock app ($pkg)"
+            !ok && fallback == null && shown?.expected == true ->
+                "hidden (${if (pkg == null) "you hid ${timeKey(sys.triggerAt)}" else pkg}); showing your usual ${alarmLabel(c, shown)} as expected"
+            !ok && fallback != null ->
+                "hidden (${if (pkg == null) "you hid ${timeKey(sys.triggerAt)}" else pkg}); showing ${alarmLabel(c, fallback)} from the clock's notification"
+            pkg == null && !ok -> "hidden: you marked alarms at ${timeKey(sys.triggerAt)} as not yours (Routine/Bedtime)"
+            pkg !in ClockApps.PACKAGES && pkg != null -> "hidden: not a clock app ($pkg)"
             info.triggerTime - now > WINDOW_MS -> "hidden: more than 24 h away"
             !Prefs.showAlarm(c) -> "hidden: Next alarm is off"
+            pkg == null -> "shown (owner not reported — Google Clock does this; if it's a Routine, hide this time)"
             else -> "shown"
         }
         return "$time from $app · $why"
     }
 
     /** Pure rule, unit-tested. */
-    fun filter(a: NextAlarm?, now: Long): NextAlarm? {
+    fun filter(a: NextAlarm?, now: Long, hidden: Set<String> = emptySet()): NextAlarm? {
         if (a == null) return null
-        if (a.sourcePkg !in ClockApps.PACKAGES) return null
+        if (!accepted(a, hidden)) return null
         if (a.triggerAt < now || a.triggerAt - now > WINDOW_MS) return null
         return a
     }

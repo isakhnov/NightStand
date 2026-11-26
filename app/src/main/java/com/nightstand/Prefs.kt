@@ -122,4 +122,12 @@ object Prefs {
     /** Power: at night the face redraws once a minute unless this is on. */
     fun secondHandAtNight(c: Context) = sp(c).getBoolean("secondHandAtNight", false)
     fun setSecondHandAtNight(c: Context, v: Boolean) = sp(c).edit().putBoolean("secondHandAtNight", v).apply()
+
+    /** Times of day ("HH:mm") whose ownerless alarms are Routines/Bedtime, not the user's alarms. */
+    fun hiddenAlarmTimes(c: Context): Set<String> = sp(c).getStringSet("hiddenAlarmTimes", emptySet())!!
+    fun setAlarmTimeHidden(c: Context, key: String, hide: Boolean) {
+        val s = hiddenAlarmTimes(c).toMutableSet()
+        if (hide) s.add(key) else s.remove(key)
+        sp(c).edit().putStringSet("hiddenAlarmTimes", s).apply()
+    }
 }
