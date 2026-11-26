@@ -5,7 +5,12 @@ import android.content.Context
 import com.nightstand.Prefs
 
 /** The single next alarm Android reports (see docs/views/05-alarms-timers). */
-data class NextAlarm(val triggerAt: Long, val sourcePkg: String?)
+data class NextAlarm(
+    val triggerAt: Long,
+    val sourcePkg: String?,
+    /** Learned from earlier nights, not confirmed by Android right now (drawn dimmed, "~"). */
+    val expected: Boolean = false,
+)
 
 /** A timer a clock app is showing in its ongoing notification. */
 data class RunningTimer(
@@ -48,7 +53,23 @@ object Alarms {
         if (!Prefs.showAlarm(c)) return null
         val info = c.getSystemService(AlarmManager::class.java).nextAlarmClock
         val system = info?.let { NextAlarm(it.triggerTime, it.showIntent?.creatorPackage) }
-        return choose(system, AlarmMemory.get(c, now), now)
+        val patterns = observe(c, system, now)
+        val chosen = choose(system, AlarmMemory.get(c, now), now)
+        if (chosen != null || !Prefs.rememberAlarms(c)) return chosen
+        // Slot held by an internal entry (Routines/Bedtime): show the learned alarm as "expected".
+        val holder = system?.takeIf { it.sourcePkg !in ClockApps.PACKAGES }?.triggerAt
+        return AlarmPatterns.expected(patterns, now, WINDOW_MS, holder)
+    }
+
+    /** Learn from what Android reports and drop contradicted patterns. */
+    fun observe(c: Context, system: NextAlarm?, now: Long = System.currentTimeMillis()): List<AlarmPatterns.Pattern> {
+        var list = AlarmPatterns.load(c)
+        if (system != null && system.sourcePkg in ClockApps.PACKAGES && system.triggerAt > now) {
+            list = AlarmPatterns.record(list, system, now)
+        }
+        val pruned = AlarmPatterns.prune(list, system?.triggerAt, now)
+        if (pruned != AlarmPatterns.load(c)) AlarmPatterns.save(c, pruned)
+        return pruned
     }
 
     /**
@@ -82,6 +103,8 @@ object Alarms {
             if (android.text.format.DateFormat.is24HourFormat(c)) "EEE HH:mm" else "EEE h:mm a", info.triggerTime)
         val fallback = filter(AlarmMemory.get(c, now), now)
         val why = when {
+            pkg !in ClockApps.PACKAGES && fallback == null && next(c, now)?.expected == true ->
+                "internal alarm (${pkg ?: "no owner"}) hidden; showing your usual ${alarmLabel(c, next(c, now)!!)} as expected"
             pkg !in ClockApps.PACKAGES && fallback != null ->
                 "internal alarm (${pkg ?: "no owner"}) hidden; showing ${alarmLabel(c, fallback)} from the clock's notification"
             pkg == null -> "hidden: set by an app that doesn't identify itself (often a Bedtime/Sleep " +
@@ -158,6 +181,7 @@ object AlarmRecheck {
 
 class AlarmRecheckReceiver : android.content.BroadcastReceiver() {
     override fun onReceive(c: Context, i: android.content.Intent) {
+        Alarms.next(c) // learn the real alarm now visible
         com.nightstand.WatcherService.log("internal alarm passed; next alarm now: " + Alarms.explain(c))
         com.nightstand.StandByState.notifyAlarmChanged()
         AlarmRecheck.schedule(c) // a later internal alarm may hold the slot next

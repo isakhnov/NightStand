@@ -150,6 +150,10 @@ fun LookTab(s: SettingsScope) {
                 SettingRow("Big countdown, last minute · night", null) {
                     Switch(bigNight, { bigNight = it; Prefs.setBigCountdownNight(c, it) }, enabled = timers)
                 }
+                var remember by remember { mutableStateOf(Prefs.rememberAlarms(c)) }
+                SettingRow("Remember my alarms", "When a Routine or Bedtime hides your alarm, show it dimmed as \"~7:30 AM · expected\"") {
+                    Switch(remember, { remember = it; Prefs.setRememberAlarms(c, it); version++ }, enabled = alarm)
+                }
                 // UNDER DEVELOPMENT placeholder: visible, disabled, not wired (see Alarms.next()).
                 SettingRow("Alarms from other apps", "Calendar, Routines, Tasker…") {
                     Text("Under development", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Muted,

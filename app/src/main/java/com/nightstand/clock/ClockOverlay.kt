@@ -60,7 +60,8 @@ object ClockOverlay {
     private val small = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = Fonts.bold }
 
     fun alarmTime(c: android.content.Context, a: NextAlarm): String =
-        DateFormat.format(if (DateFormat.is24HourFormat(c)) "HH:mm" else "h:mm a", Date(a.triggerAt)).toString()
+        (if (a.expected) "~" else "") +
+            DateFormat.format(if (DateFormat.is24HourFormat(c)) "HH:mm" else "h:mm a", Date(a.triggerAt)).toString()
 
     /**
      * Analog face additions: timer arc on the ring (minute hand → end minute,
@@ -88,7 +89,8 @@ object ClockOverlay {
             val deg = (at.get(Calendar.HOUR) + at.get(Calendar.MINUTE) / 60f) * 30f
             val rad = Math.toRadians(deg.toDouble())
             val br = r * 0.94f // on the tick ring, clear of the numerals
-            Glyphs.bell(c, cx + (sin(rad) * br).toFloat(), cy - (cos(rad) * br).toFloat(), r * 0.095f, p.primary)
+            Glyphs.bell(c, cx + (sin(rad) * br).toFloat(), cy - (cos(rad) * br).toFloat(), r * 0.095f,
+                if (a.expected) p.secondary else p.primary)
         }
 
         // Readout, opposite the hour hand.
@@ -140,12 +142,14 @@ object ClockOverlay {
         x.alarm?.let { a ->
             small.textSize = size
             y += size * 1.3f
-            Glyphs.bell(c, left + size * 0.45f, y - size * 0.36f, size, p.primary)
-            small.color = p.primary
+            val col = if (a.expected) p.secondary else p.primary
+            Glyphs.bell(c, left + size * 0.45f, y - size * 0.36f, size, col)
+            small.color = col
             val t = alarmTime(ctx, a)
             c.drawText(t, left + size * 1.3f, y, small)
             small.color = p.secondary
-            c.drawText(" · " + formatIn(a.triggerAt - x.now), left + size * 1.3f + small.measureText(t), y, small)
+            c.drawText(" · " + formatIn(a.triggerAt - x.now) + if (a.expected) " · expected" else "",
+                left + size * 1.3f + small.measureText(t), y, small)
             y += size * 0.4f
         }
         val chips = x.timers.sortedBy { it.state.ordinal }.take(2)

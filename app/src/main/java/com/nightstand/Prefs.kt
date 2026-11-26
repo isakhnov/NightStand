@@ -114,4 +114,8 @@ object Prefs {
      * Look; Alarms.next() ignores it and always uses clock apps only.
      */
     fun alarmsFromOtherApps(c: Context) = sp(c).getBoolean("alarmsFromOtherApps", false)
+
+    /** Show learned clock alarms as "expected" while a Routines/Bedtime entry hides them. */
+    fun rememberAlarms(c: Context) = sp(c).getBoolean("rememberAlarms", true)
+    fun setRememberAlarms(c: Context, v: Boolean) = sp(c).edit().putBoolean("rememberAlarms", v).apply()
 }

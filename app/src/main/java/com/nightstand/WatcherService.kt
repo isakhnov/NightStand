@@ -56,6 +56,7 @@ class WatcherService : Service(), SensorEventListener {
                 Intent.ACTION_SCREEN_ON, Intent.ACTION_USER_PRESENT -> refreshLocked()
                 android.app.AlarmManager.ACTION_NEXT_ALARM_CLOCK_CHANGED -> {
                     com.nightstand.clock.AlarmRecheck.schedule(c)
+                    com.nightstand.clock.Alarms.next(c) // learns/prunes alarm patterns
                     StandByState.notifyAlarmChanged()
                 }
             }
