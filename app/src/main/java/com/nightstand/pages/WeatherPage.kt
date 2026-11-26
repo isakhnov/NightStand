@@ -36,6 +36,13 @@ class WeatherPage(context: Context, data: DisplayData) : ClockSplitPage(context,
         invalidate()
     }
 
+    private var scale = 1f
+
+    private fun drawRightScaled(c: Canvas, r: RectF, w: com.nightstand.weather.WeatherNow, k: Float) {
+        scale *= k
+        try { drawRight(c, r, Calendar.getInstance()) } finally { scale = 1f }
+    }
+
     override fun drawRight(c: Canvas, r: RectF, now: Calendar) {
         val p = palette
         val w = Weather.current
@@ -51,10 +58,10 @@ class WeatherPage(context: Context, data: DisplayData) : ClockSplitPage(context,
 
         // Sizes first, then centre the whole block in the pane as one
         // left-aligned group (iOS widget style), horizontally and vertically.
-        place.textSize = h * 0.085f
-        temp.textSize = h * 0.42f
-        label.textSize = h * 0.085f
-        val icon = h * 0.1f
+        place.textSize = h * 0.085f * scale
+        temp.textSize = h * 0.42f * scale
+        label.textSize = h * 0.085f * scale
+        val icon = h * 0.1f * scale
         val nameStr = w.place ?: "Current location"
         val asz = place.textSize * 0.62f
         val tempStr = "${w.temp}°"
@@ -66,14 +73,20 @@ class WeatherPage(context: Context, data: DisplayData) : ClockSplitPage(context,
         val tempW = temp.measureText(tempStr)
         val condW = icon * 1.35f + label.measureText(condStr)
         val hlW = label.measureText(hlStr)
-        val blockW = minOf(maxW, maxOf(placeW, tempW, condW, hlW))
+        // The place name ellipsizes on its own; only the fixed-content lines drive scaling.
+        val fixedW = maxOf(tempW, condW, hlW)
+        var blockW = maxOf(minOf(placeW, maxW), fixedW)
+        // Near-square screens (foldables) and tablets: sizes follow the height,
+        // so the block can be wider than the pane. Scale everything down to fit.
+        if (fixedW > maxW && scale == 1f) return drawRightScaled(c, r, w, maxW / fixedW) // one re-layout only
+        blockW = minOf(maxW, blockW)
 
         val pfm = place.fontMetrics; val lfm = label.fontMetrics
         val placeH = -pfm.ascent
         // Big numerals: use their real ink height (no descender) so spacing looks even.
         val tb = android.graphics.Rect(); temp.getTextBounds(tempStr, 0, tempStr.length, tb)
         val tempTop = -tb.top.toFloat()
-        val gap1 = h * 0.08f; val gap2 = h * 0.07f; val gap3 = h * 0.04f
+        val gap1 = h * 0.08f * scale; val gap2 = h * 0.07f * scale; val gap3 = h * 0.04f * scale
         val condH = maxOf(icon, -lfm.ascent)
         val hlH = -lfm.ascent
         val blockH = placeH + gap1 + tempTop + gap2 + condH + gap3 + hlH

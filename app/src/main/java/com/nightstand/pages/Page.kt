@@ -52,6 +52,10 @@ abstract class Page(context: Context, val data: DisplayData) : View(context) {
         return com.nightstand.clock.ClockExtras(data.nextAlarm, timers.let { data.mainTimer?.takeIf { _ -> it.isNotEmpty() } }, timers, now)
     }
 
+    /** Second hand shown now? Off at night by default (power: per-minute redraw). */
+    protected val showSecondHand get() = com.nightstand.Prefs.secondHand(context) &&
+        (!palette.night || com.nightstand.Prefs.secondHandAtNight(context))
+
     /** A timer is counting: redraw every second while this page is visible. */
     protected val timerTicking get() = data.hasRunningTimer && com.nightstand.Prefs.showTimers(context)
 

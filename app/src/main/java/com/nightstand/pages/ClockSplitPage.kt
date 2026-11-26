@@ -21,7 +21,7 @@ import java.util.Locale
  */
 abstract class ClockSplitPage(context: Context, data: DisplayData) : Page(context, data) {
     override val needsSeconds get() =
-        (Prefs.clockStyle(context) == Prefs.ClockStyle.ANALOG && Prefs.secondHand(context)) || timerTicking
+        (Prefs.clockStyle(context) == Prefs.ClockStyle.ANALOG && showSecondHand) || timerTicking
 
     /** Most of the width the clock may take; it is normally height-limited. */
     protected open val maxClockFraction = 0.46f
@@ -51,7 +51,7 @@ abstract class ClockSplitPage(context: Context, data: DisplayData) : Page(contex
 
         if (Prefs.clockStyle(context) == Prefs.ClockStyle.ANALOG) {
             val r = minOf(h / 2 - pad, w * maxClockFraction / 2 - pad)
-            AnalogClock.draw(c, pad + r, h / 2, r, now, p, showSeconds = Prefs.secondHand(context)) { cv ->
+            AnalogClock.draw(c, pad + r, h / 2, r, now, p, showSeconds = showSecondHand) { cv ->
                 ClockOverlay.drawAnalog(context, cv, pad + r, h / 2, r, now, p, extras)
             }
             clockRight = pad + 2 * r

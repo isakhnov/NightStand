@@ -118,4 +118,8 @@ object Prefs {
     /** Show learned clock alarms as "expected" while a Routines/Bedtime entry hides them. */
     fun rememberAlarms(c: Context) = sp(c).getBoolean("rememberAlarms", true)
     fun setRememberAlarms(c: Context, v: Boolean) = sp(c).edit().putBoolean("rememberAlarms", v).apply()
+
+    /** Power: at night the face redraws once a minute unless this is on. */
+    fun secondHandAtNight(c: Context) = sp(c).getBoolean("secondHandAtNight", false)
+    fun setSecondHandAtNight(c: Context, v: Boolean) = sp(c).edit().putBoolean("secondHandAtNight", v).apply()
 }

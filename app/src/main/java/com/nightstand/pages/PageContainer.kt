@@ -48,9 +48,12 @@ class PageContainer(context: Context) : FrameLayout(context) {
     private var velocity: VelocityTracker? = null
     private var anim: ValueAnimator? = null
 
-    private var lastTapAt = 0L
+    /** Event time of the last single tap (touch clock, not wall clock); none yet = far past. */
+    private var lastTapAt = Long.MIN_VALUE / 2
     private val doubleTapMs = ViewConfiguration.getDoubleTapTimeout().toLong()
     private val pendingTap = Runnable { onTap() }
+    /** Main-thread handler (not View.post*, which defers while detached). */
+    private val ui = android.os.Handler(android.os.Looper.getMainLooper())
 
     // Overlay: page dots + transient label (brightness %, page name).
     private var overlayText: String? = null
@@ -63,7 +66,11 @@ class PageContainer(context: Context) : FrameLayout(context) {
 
     fun setPages(list: List<Page>, startId: String?) {
         removeAllViews(); pages.clear(); pages += list
-        list.forEach { it.palette = palette; it.visibility = View.INVISIBLE; addView(it, LayoutParams(-1, -1)) }
+        list.forEach {
+            it.palette = palette; it.visibility = View.INVISIBLE; addView(it, LayoutParams(-1, -1))
+            // Power: a clock needs ≤ 1 redraw/s; let variable-refresh displays (S26 LTPO) idle low.
+            if (android.os.Build.VERSION.SDK_INT >= 35) it.setRequestedFrameRate(View.REQUESTED_FRAME_RATE_CATEGORY_LOW)
+        }
         index = list.indexOfFirst { it.pageId == startId }.coerceAtLeast(0)
         current?.let { it.visibility = View.VISIBLE; it.translationX = 0f }
     }
@@ -106,7 +113,7 @@ class PageContainer(context: Context) : FrameLayout(context) {
                 } else if (mode == 0) {
                     // Controls on the page (e.g. play/pause) win over tap/double-tap
                     // and fire immediately, without the double-tap delay.
-                    if (current?.onTapAt(e.x, e.y) != true) tap()
+                    if (current?.onTapAt(e.x, e.y) != true) tap(e.eventTime)
                 }
                 velocity?.recycle(); velocity = null
             }
@@ -118,12 +125,11 @@ class PageContainer(context: Context) : FrameLayout(context) {
         return true
     }
 
-    private fun tap() {
-        val now = System.currentTimeMillis()
+    private fun tap(now: Long) {
         if (now - lastTapAt < doubleTapMs) {
-            removeCallbacks(pendingTap); lastTapAt = 0; onDoubleTap()
+            ui.removeCallbacks(pendingTap); lastTapAt = Long.MIN_VALUE / 2; onDoubleTap()
         } else {
-            lastTapAt = now; postDelayed(pendingTap, doubleTapMs)
+            lastTapAt = now; ui.postDelayed(pendingTap, doubleTapMs)
         }
     }
 

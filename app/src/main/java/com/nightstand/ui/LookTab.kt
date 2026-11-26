@@ -93,6 +93,10 @@ fun LookTab(s: SettingsScope) {
                 SettingRow("Second hand", "Analog only") {
                     Switch(seconds, { seconds = it; Prefs.setSecondHand(c, it); version++ }, enabled = analog)
                 }
+                var secNight by remember { mutableStateOf(Prefs.secondHandAtNight(c)) }
+                SettingRow("Second hand at night", "Off saves power: the face then redraws once a minute") {
+                    Switch(secNight, { secNight = it; Prefs.setSecondHandAtNight(c, it); version++ }, enabled = analog && seconds)
+                }
             }
 
             SectionLabel("Night mode")

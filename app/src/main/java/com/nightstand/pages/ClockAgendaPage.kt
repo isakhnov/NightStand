@@ -32,7 +32,7 @@ class ClockAgendaPage(context: Context, data: DisplayData) : Page(context, data)
     companion object { const val ID = "clock_agenda" }
     override val pageId = ID
     override val needsSeconds get() =
-        (Prefs.clockStyle(context) == Prefs.ClockStyle.ANALOG && Prefs.secondHand(context)) || timerTicking
+        (Prefs.clockStyle(context) == Prefs.ClockStyle.ANALOG && showSecondHand) || timerTicking
 
     private val clockPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = Fonts.heavy }
     private val text = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = Fonts.semibold }
@@ -57,7 +57,7 @@ class ClockAgendaPage(context: Context, data: DisplayData) : Page(context, data)
         if (Prefs.clockStyle(context) == Prefs.ClockStyle.ANALOG) {
             val r = minOf(split - pad * 2, bottom - pad) / 2
             val cx = pad + split / 2 - pad / 2; val cy = pad / 2 + (bottom) / 2
-            AnalogClock.draw(c, cx, cy, r, now, p, showSeconds = Prefs.secondHand(context)) { cv ->
+            AnalogClock.draw(c, cx, cy, r, now, p, showSeconds = showSecondHand) { cv ->
                 ClockOverlay.drawAnalog(context, cv, cx, cy, r, now, p, extras)
             }
         } else {

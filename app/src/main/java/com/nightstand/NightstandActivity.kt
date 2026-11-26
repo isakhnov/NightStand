@@ -129,7 +129,8 @@ class NightstandActivity : Activity(), SensorEventListener {
         StandByState.changeListeners += onFeedChanged
         StandByState.alarmListeners += onAlarmChanged
         Prefs.darkness(this).let { nightCtl.enterLux = it.enterLux; nightCtl.exitLux = it.exitLux }
-        lightSensor?.let { sensors.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL) }
+        // 1 sample/s, batched 2 s: night mode reacts over seconds anyway (8 s hold).
+        lightSensor?.let { sensors.registerListener(this, it, 1_000_000, 2_000_000) }
         data.showNotifContent = Prefs.showContent(this)
         refreshEvents(); refreshNotifs(); refreshAlarm()
         applyBrightness()
@@ -171,7 +172,8 @@ class NightstandActivity : Activity(), SensorEventListener {
     // --- content ------------------------------------------------------------
 
     private fun onMinute() {
-        refreshEvents()
+        // Calendar changes arrive via the ContentObserver; this is only a safety net.
+        if (Calendar.getInstance().get(Calendar.MINUTE) % 5 == 0) refreshEvents()
         refreshAlarm()
         if (lightSensor == null &&
             nightCtl.set(NightModeController.nightBySchedule(Calendar.getInstance().get(Calendar.HOUR_OF_DAY)))
@@ -225,6 +227,7 @@ class NightstandActivity : Activity(), SensorEventListener {
 
     private fun applyBrightness() {
         container.palette = if (isNight) Palette.night(Prefs.nightColor(this)) else Palette.DAY
+        restartSecondTick() // second hand may be off at night and on by day
         val night = Prefs.nightBrightness(this)
         window.attributes = window.attributes.apply {
             screenBrightness = when {

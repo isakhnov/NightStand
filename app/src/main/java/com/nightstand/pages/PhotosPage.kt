@@ -115,7 +115,7 @@ class PhotosPage(context: Context, data: DisplayData) : ClockSplitPage(context, 
         if (fade >= 1f) prev = null
 
         val animating = active && !night && t < DAY_MS
-        if (animating) postInvalidateDelayed(33)
+        if (animating) postInvalidateDelayed(66) // 15 fps: a slow pan doesn't need more (power)
     }
 
     private fun drawPhoto(c: Canvas, b: Bitmap, r: RectF, t: Long, dir: Int, alpha: Int) {

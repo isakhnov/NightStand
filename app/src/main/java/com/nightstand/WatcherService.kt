@@ -52,8 +52,8 @@ class WatcherService : Service(), SensorEventListener {
             when (i.action) {
                 Intent.ACTION_POWER_CONNECTED -> setCharging(true)
                 Intent.ACTION_POWER_DISCONNECTED -> setCharging(false)
-                Intent.ACTION_SCREEN_OFF -> { log("screen off"); maybeLaunch(policy.onScreenOff()) }
-                Intent.ACTION_SCREEN_ON, Intent.ACTION_USER_PRESENT -> refreshLocked()
+                Intent.ACTION_SCREEN_OFF -> { log("screen off"); updateWakeLock(); maybeLaunch(policy.onScreenOff()) }
+                Intent.ACTION_SCREEN_ON, Intent.ACTION_USER_PRESENT -> { updateWakeLock(); refreshLocked() }
                 android.app.AlarmManager.ACTION_NEXT_ALARM_CLOCK_CHANGED -> {
                     com.nightstand.clock.AlarmRecheck.schedule(c)
                     com.nightstand.clock.Alarms.next(c) // learns/prunes alarm patterns
@@ -122,18 +122,39 @@ class WatcherService : Service(), SensorEventListener {
         maybeLaunch(policy.onLocked(locked))
     }
 
+    /** True when using a wake-up accelerometer (no wake lock needed). */
+    private var wakeupSensor = false
+
+    /**
+     * Power: prefer the WAKE-UP accelerometer with 1 s batching. The sensor hub
+     * buffers samples and wakes the CPU about once a second, so the CPU can
+     * sleep in between — instead of a partial wake lock held all night while
+     * plugged in (0.7 and earlier). PostureDetector uses event timestamps, so
+     * batched delivery doesn't change its results.
+     * Fallback (no wake-up accelerometer): normal sensor + wake lock, held
+     * only while the screen is off (a lit screen keeps the CPU awake anyway).
+     */
     private fun startAccel() {
         if (accelOn) return
-        val accel = sensors.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) ?: return
+        val wake = sensors.getDefaultSensor(Sensor.TYPE_ACCELEROMETER, true)
+        val accel = wake ?: sensors.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) ?: return
+        wakeupSensor = wake != null
         posture.reset()
-        sensors.registerListener(this, accel, SensorManager.SENSOR_DELAY_NORMAL)
+        sensors.registerListener(this, accel, SAMPLE_US, if (wakeupSensor) BATCH_US else 0)
         accelOn = true
-        // Without this the CPU may suspend with the screen off and sensor events
-        // stop arriving, so a phone set down on the stand with the screen already
-        // off would never be noticed. Held only while plugged in.
-        wakeLock = power.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "nightstand:watch").apply {
-            setReferenceCounted(false)
-            acquire()
+        log("accelerometer on (${if (wakeupSensor) "wake-up, batched" else "fallback + wake lock when screen off"})")
+        updateWakeLock()
+    }
+
+    private fun updateWakeLock() {
+        val need = accelOn && !wakeupSensor && !power.isInteractive
+        val held = wakeLock?.isHeld == true
+        if (need && !held) {
+            wakeLock = power.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "nightstand:watch").apply {
+                setReferenceCounted(false); acquire()
+            }
+        } else if (!need && held) {
+            wakeLock?.release(); wakeLock = null
         }
     }
 
@@ -204,6 +225,10 @@ class WatcherService : Service(), SensorEventListener {
         const val CH_LAUNCH = "launch"
         const val ID_WATCH = 1
         const val ID_LAUNCH = 2
+        /** 5 Hz is plenty to see the phone placed or lifted. */
+        const val SAMPLE_US = 200_000
+        /** Batch up to 1 s in the sensor hub before waking the CPU. */
+        const val BATCH_US = 1_000_000
 
         fun log(msg: String) {
             Log.i(TAG, msg)
