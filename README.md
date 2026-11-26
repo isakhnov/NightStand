@@ -17,7 +17,7 @@ setup; analog or digital clock everywhere):
 | Clock + up next | clock | Google Calendar events, notifications strip |
 | Clock + weather | clock | place, temperature (°F default, °C option), condition, H/L — Open-Meteo, approximate location |
 | Big clock | full-screen clock | — |
-| Clock + photos | clock | photos on the phone (all / favourites / one album): starts as the whole photo, zooms to fill, pans across; red monochrome and still at night |
+| Clock + photos | clock | photos on the phone (all / favourites / one album): starts as the whole photo, zooms to fill, pans across; red monochrome and still at night. Optional **Smart selection** (on-device MobileCLIP, model downloaded on demand): skips utility shots, one per burst, **swipe down on the photo** (by day) to hide it and its look-alikes ([docs](docs/photos-intelligence/step-a/tflite/README.md)) |
 | Clock + now playing | clock | album art, title, artist, progress, ⏮ ⏯ ⏭ for the active media session (Spotify preferred; works with any player) |
 
 Calendar is Google accounts only (Outlook/work deliberately excluded). Weather

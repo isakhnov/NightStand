@@ -67,6 +67,8 @@ fun ViewsTab(s: SettingsScope) {
     val order = remember(version) { PageRegistry.ordered(c) }
     val off = remember(version) { Prefs.disabledPages(c) }
     var expanded by remember { mutableStateOf<String?>(null) }
+    var hiddenOpen by remember { mutableStateOf(false) }
+    if (hiddenOpen) { HiddenPhotosScreen { hiddenOpen = false; version++ }; return }
 
     fun move(i: Int, d: Int) {
         val ids = order.map { it.id }.toMutableList()
@@ -107,7 +109,7 @@ fun ViewsTab(s: SettingsScope) {
                             Switch(on, { Prefs.setPageEnabled(c, e.id, it); version++ })
                         }
                         if (open) Column(Modifier.padding(start = 14.dp, end = 14.dp, bottom = 14.dp)) {
-                            ViewOptions(e.id) { version++ }
+                            ViewOptions(e.id, { hiddenOpen = true }) { version++ }
                         }
                     }
                 }
@@ -133,13 +135,13 @@ private fun subtitle(c: android.content.Context, id: String): String = when (id)
         Prefs.PhotoSource.ALL -> "All photos"
         Prefs.PhotoSource.FAVORITES -> "Favorites"
         Prefs.PhotoSource.ALBUM -> "Album · " + (Prefs.photoAlbum(c)?.second ?: "—")
-    }
+    } + if (Prefs.photoSmart(c)) " · smart" else ""
     NowPlayingPage.ID -> "Spotify or any player"
     else -> ""
 }
 
 @Composable
-private fun ViewOptions(id: String, changed: () -> Unit) {
+private fun ViewOptions(id: String, openHidden: () -> Unit, changed: () -> Unit) {
     val c = LocalContext.current
     when (id) {
         WeatherPage.ID -> {
@@ -196,8 +198,7 @@ private fun ViewOptions(id: String, changed: () -> Unit) {
                     }
                 }
             }
-            Spacer(Modifier.height(10.dp))
-            Text("At night photos turn red, stop moving and change every 10 minutes.", fontSize = 13.sp, color = Muted)
+            SmartPhotoOptions(openHidden, changed)
         }
         NowPlayingPage.ID -> {
             Text("Shows whatever is playing, Spotify first, with ⏮ ⏯ ⏭. Needs Notification access (Setup).",

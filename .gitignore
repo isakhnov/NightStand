@@ -16,3 +16,6 @@ nightstand.log
 
 # Signing key: never commit (repo is public). Keep your own copy.
 signing/
+
+# Model files built by docs/photos-intelligence/step-a/tflite (published as GitHub release assets, never committed)
+dist/

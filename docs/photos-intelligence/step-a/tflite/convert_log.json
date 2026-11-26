@@ -1,0 +1,16 @@
+{
+ "static_onnx_nodes": 345,
+ "onnx2tf_files": [
+  "assets",
+  "fingerprint.pb",
+  "saved_model.pb",
+  "schema.fbs",
+  "schema_generated.py",
+  "variables",
+  "vision_static_float16.tflite",
+  "vision_static_float32.tflite"
+ ],
+ "drq": "ok",
+ "w8all": "ok",
+ "w8": "ok"
+}

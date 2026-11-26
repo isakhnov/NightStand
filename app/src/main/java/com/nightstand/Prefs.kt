@@ -122,4 +122,26 @@ object Prefs {
     /** Power: at night the face redraws once a minute unless this is on. */
     fun secondHandAtNight(c: Context) = sp(c).getBoolean("secondHandAtNight", false)
     fun setSecondHandAtNight(c: Context, v: Boolean) = sp(c).edit().putBoolean("secondHandAtNight", v).apply()
+
+    // --- Photos: Smart selection (docs/photos-intelligence/step-a) ---------------
+    /** Smart selection on: needs the downloaded model; otherwise photos stay random. */
+    fun photoSmart(c: Context) = sp(c).getBoolean("photoSmart", false)
+    fun setPhotoSmart(c: Context, v: Boolean) = sp(c).edit().putBoolean("photoSmart", v).apply()
+
+    /**
+     * How alike a photo must be to one you swiped away to be hidden too (cosine of
+     * MobileCLIP embeddings). Validation: edits of one shot (shift, JPEG, rotate,
+     * blur, re-colour) 0.975–0.999; different scenes 0.11–0.50. Strict only takes
+     * near-identical shots; Wide also takes the same subject from another angle.
+     */
+    enum class LookAlike(val label: String, val cos: Float) {
+        STRICT("Strict", 0.95f), NORMAL("Normal", 0.92f), WIDE("Wide", 0.88f)
+    }
+    fun photoLookAlike(c: Context) =
+        runCatching { LookAlike.valueOf(sp(c).getString("photoLookAlike", null)!!) }.getOrDefault(LookAlike.NORMAL)
+    fun setPhotoLookAlike(c: Context, v: LookAlike) = sp(c).edit().putString("photoLookAlike", v.name).apply()
+
+    /** Fold bursts (photos seconds apart that look alike) to their best shot. */
+    fun photoOnePerBurst(c: Context) = sp(c).getBoolean("photoOnePerBurst", true)
+    fun setPhotoOnePerBurst(c: Context, v: Boolean) = sp(c).edit().putBoolean("photoOnePerBurst", v).apply()
 }

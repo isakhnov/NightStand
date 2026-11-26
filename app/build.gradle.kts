@@ -16,8 +16,11 @@ android {
         // foreground service started from BOOT_COMPLETED, full-screen intent,
         // overlay-permission background launch — is allowed at 35.
         targetSdk = 35
-        versionCode = 14
-        versionName = "0.7.6"
+        versionCode = 15
+        versionName = "0.8.0"
+        // The phone is arm64. Play services' LiteRT client brings a small JNI lib per ABI;
+        // shipping only arm64 keeps the APK small.
+        ndk { abiFilters += listOf("arm64-v8a") }
     }
 
     // One key for every build, so each APK installs over the last one.
@@ -63,6 +66,9 @@ dependencies {
     implementation("androidx.compose.ui:ui")
     implementation("androidx.activity:activity-compose:1.9.2")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.6")
+    // Smart photos: LiteRT (TensorFlow Lite) from Google Play services — the runtime
+    // lives on the phone, not in the APK. The model is downloaded on demand (ModelStore).
+    implementation("com.google.android.gms:play-services-tflite-java:16.4.0")
     testImplementation("junit:junit:4.13.2")
     // Renders pages to PNG on the JVM (PagePreviewTest) — layout checks without a device.
     testImplementation("org.robolectric:robolectric:4.13")

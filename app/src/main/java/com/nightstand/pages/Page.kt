@@ -6,6 +6,8 @@ import com.nightstand.Event
 import com.nightstand.NotifSummary
 import com.nightstand.Palette
 
+enum class DragTarget { BRIGHTNESS, PAGE, NONE }
+
 /** Shared, activity-owned data every page can draw from. */
 class DisplayData {
     var events: List<Event> = emptyList()
@@ -45,6 +47,19 @@ abstract class Page(context: Context, val data: DisplayData) : View(context) {
     open fun onTapAt(x: Float, y: Float): Boolean = false
     /** Data in [data] changed (events, notifications, battery). */
     open fun onDataChanged() = invalidate()
+
+    /**
+     * Who gets a vertical drag that started at (x, y): night brightness (the
+     * default), the page itself (e.g. swipe a photo away), or nobody.
+     * Horizontal drags always change pages; the container decides direction first.
+     */
+    open fun verticalDragTarget(x: Float, y: Float): DragTarget = DragTarget.BRIGHTNESS
+    /** Shown when a vertical drag went to [DragTarget.NONE]. */
+    open fun verticalDragHint(): String? = null
+    /** Page-owned vertical drag in progress; [dy] px since the finger went down (positive = down). */
+    open fun onVerticalDrag(dy: Float) {}
+    /** Finger lifted (or cancelled); [vyDp] = vertical velocity in dp/s (positive = down). */
+    open fun onVerticalDragEnd(dy: Float, vyDp: Float, cancelled: Boolean) {}
 
     /** Alarm/timer additions for the clock, honouring the Look settings. */
     protected fun clockExtras(now: Long = System.currentTimeMillis()): com.nightstand.clock.ClockExtras {
