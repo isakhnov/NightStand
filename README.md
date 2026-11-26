@@ -15,10 +15,18 @@ setup; analog or digital clock everywhere):
 | View | Left | Right |
 |---|---|---|
 | Clock + up next | clock | Google Calendar events, notifications strip |
-| Clock + weather | clock | place, temperature (°F default, °C option), condition, H/L — Open-Meteo, approximate location |
+| Clock + weather | clock | iPhone-style: place + temperature on top; condition icon, text and H/L below (°F default, °C option) — Open-Meteo, approximate location |
 | Big clock | full-screen clock | — |
 | Clock + photos | clock | photos on the phone (all / favourites / one album): starts as the whole photo, zooms to fill, pans across; red monochrome and still at night |
 | Clock + now playing | clock | album art, title, artist, progress, ⏮ ⏯ ⏭ for the active media session (Spotify preferred; works with any player) |
+
+**On every clock face:** the next clock-app alarm within 24 h (bell on the
+ring / "🔔 7:30 AM · in 9 h"), running timers (arc on the ring / countdown
+chips; Android 17 Google Clock timers supported), and a big countdown in a
+timer's last minute (day on, night off). Samsung Routines/Bedtime entries that
+hold Android's single next-alarm slot are filtered out; the real alarm comes
+from a recheck after they pass, Google Clock's own "Upcoming alarm"
+notification, or — dimmed as "expected" — what was learned on earlier nights.
 
 Calendar is Google accounts only (Outlook/work deliberately excluded). Weather
 data: [Open-Meteo](https://open-meteo.com/) (CC BY 4.0). Research and mockups
@@ -37,8 +45,10 @@ Mockups: [`docs/settings-mockup/`](docs/settings-mockup/).
 renders every view, day and night, analog and digital, to `app/build/previews/`;
 `SettingsPreviewTest` does the same for each settings tab.
 
-> Status: **prototype**. It builds and its logic is unit-tested, but it hasn't run on a
-> real S26 Ultra yet. See [On-device test plan](#on-device-test-plan).
+> Status: **v1.0** — in nightly use on a Galaxy S26 Ultra (One UI 9 / Android 17).
+> 71 JVM tests (`./gradlew testDebugUnitTest`); release APK ~1.9 MB.
+> Changes per version: [CHANGELOG.md](CHANGELOG.md). Smart photo selection is the
+> next version (branch `photos-step-a`, plan in `docs/photos-intelligence/`).
 
 ---
 
@@ -209,8 +219,9 @@ The unit tests cover the logic; these are what only the phone can answer:
 | 10 | Reboot | Watcher restarts by itself | `BootReceiver` |
 | 11 | Samsung Always On Display on | Nightstand still appears over it | |
 
-## Next steps after the device test
-- Swap the night "tap to brighten" for real Motion to Wake (accelerometer nudge).
-- Settings: brightness levels, which calendars, clock style, 24h override.
-- Weather and alarm-time line (next `AlarmManager.getNextAlarmClock()`).
-- Optional `DreamService` host for idea A as a fallback.
+## Next steps
+- **v1.1 — smart photo selection** (step A): on-device image model, swipe down to
+  hide a photo and its look-alikes, burst de-duplication. See
+  `docs/photos-intelligence/step-a/`.
+- **Later — step B:** a classifier trained on photos you pick (`docs/photos-intelligence/step-b/`).
+- Alarms from non-clock apps (placeholder "Under development" in Look).
