@@ -16,7 +16,6 @@ android {
         // foreground service started from BOOT_COMPLETED, full-screen intent,
         // overlay-permission background launch — is allowed at 35.
         targetSdk = 35
-        versionCode = 17
         versionCode = 18
         versionName = "1.1-beta2"
         // The phone is arm64. Play services' LiteRT client brings a small JNI lib per ABI;
