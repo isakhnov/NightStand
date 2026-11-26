@@ -123,6 +123,7 @@ object Prefs {
     fun secondHandAtNight(c: Context) = sp(c).getBoolean("secondHandAtNight", false)
     fun setSecondHandAtNight(c: Context, v: Boolean) = sp(c).edit().putBoolean("secondHandAtNight", v).apply()
 
+<<<<<<< HEAD
     // --- Photos: Smart selection (docs/photos-intelligence/step-a) ---------------
     /** Smart selection on: needs the downloaded model; otherwise photos stay random. */
     fun photoSmart(c: Context) = sp(c).getBoolean("photoSmart", false)
@@ -144,4 +145,13 @@ object Prefs {
     /** Fold bursts (photos seconds apart that look alike) to their best shot. */
     fun photoOnePerBurst(c: Context) = sp(c).getBoolean("photoOnePerBurst", true)
     fun setPhotoOnePerBurst(c: Context, v: Boolean) = sp(c).edit().putBoolean("photoOnePerBurst", v).apply()
+=======
+    /** Times of day ("HH:mm") whose ownerless alarms are Routines/Bedtime, not the user's alarms. */
+    fun hiddenAlarmTimes(c: Context): Set<String> = sp(c).getStringSet("hiddenAlarmTimes", emptySet())!!
+    fun setAlarmTimeHidden(c: Context, key: String, hide: Boolean) {
+        val s = hiddenAlarmTimes(c).toMutableSet()
+        if (hide) s.add(key) else s.remove(key)
+        sp(c).edit().putStringSet("hiddenAlarmTimes", s).apply()
+    }
+>>>>>>> main
 }

@@ -138,6 +138,32 @@ fun LookTab(s: SettingsScope) {
                 SettingRow("Next alarm", "Clock app alarms ringing within 24 h\nNow: $detected") {
                     Switch(alarm, { alarm = it; Prefs.setShowAlarm(c, it); version++ })
                 }
+                // Ownerless entries (Google Clock on the S26 — but also Samsung Routines/Bedtime):
+                // let the user say which times aren't alarms.
+                var hiddenTimes by remember { mutableStateOf(Prefs.hiddenAlarmTimes(c)) }
+                val raw = remember(s.tick, hiddenTimes) {
+                    c.getSystemService(android.app.AlarmManager::class.java).nextAlarmClock
+                        ?.takeIf { it.showIntent?.creatorPackage == null }
+                }
+                raw?.let { info ->
+                    val key = com.nightstand.clock.Alarms.timeKey(info.triggerTime)
+                    val label = android.text.format.DateFormat.format(
+                        if (android.text.format.DateFormat.is24HourFormat(c)) "HH:mm" else "h:mm a", info.triggerTime)
+                    if (key !in hiddenTimes) androidx.compose.material3.TextButton({
+                        Prefs.setAlarmTimeHidden(c, key, true); hiddenTimes = Prefs.hiddenAlarmTimes(c); version++
+                    }) { Text("Not my alarm (Routine/Bedtime): hide alarms at $label") }
+                }
+                if (hiddenTimes.isNotEmpty()) {
+                    Text("Hidden alarm times", fontSize = 13.sp, color = Muted, modifier = Modifier.padding(top = 6.dp))
+                    hiddenTimes.sorted().forEach { key ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(key, fontSize = 15.sp, modifier = Modifier.weight(1f))
+                            androidx.compose.material3.TextButton({
+                                Prefs.setAlarmTimeHidden(c, key, false); hiddenTimes = Prefs.hiddenAlarmTimes(c); version++
+                            }) { Text("Unhide") }
+                        }
+                    }
+                }
                 val timerNow = remember(s.tick, timers) {
                     when {
                         !com.nightstand.NotificationFeed.isGranted(c) -> "Notification access is off (Setup)"

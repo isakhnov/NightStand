@@ -101,13 +101,27 @@ fun SettingsApp(initialTab: Tab = Tab.HOME) {
             }
         },
     ) { pad ->
-        Box(Modifier.padding(pad)) {
-            when (tab) {
-                Tab.HOME -> HomeTab(scope)
-                Tab.VIEWS -> ViewsTab(scope)
-                Tab.LOOK -> LookTab(scope)
-                Tab.SETUP -> SetupTab(scope)
-                Tab.DEBUG -> DebugTab(scope)
+        // Pull down on any tab to re-read everything live (alarm, timers,
+        // permissions) — 0.7.x/1.0 only refreshed when the app was reopened.
+        var refreshing by remember { mutableStateOf(false) }
+        androidx.compose.runtime.LaunchedEffect(refreshing) {
+            if (refreshing) { kotlinx.coroutines.delay(400); refreshing = false }
+        }
+        @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+        androidx.compose.material3.pulltorefresh.PullToRefreshBox(
+            isRefreshing = refreshing,
+            onRefresh = { refreshing = true; scope.refresh() },
+            modifier = Modifier.padding(pad),
+        ) {
+            // key(tick): re-create the tab so every remembered value is read again.
+            androidx.compose.runtime.key(tick) {
+                when (tab) {
+                    Tab.HOME -> HomeTab(scope)
+                    Tab.VIEWS -> ViewsTab(scope)
+                    Tab.LOOK -> LookTab(scope)
+                    Tab.SETUP -> SetupTab(scope)
+                    Tab.DEBUG -> DebugTab(scope)
+                }
             }
         }
     }
