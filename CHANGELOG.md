@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.0.6
+- **Charging ring** (top-left): level arc, charge-limit tick (Samsung limit learned automatically), centre fills to a solid disc at the limit, lightning bolt while plugged in; green by day, night colour at night. Option: hide above 95 % (Look → Charging). *(1.0.5–1.0.6)*
+- **Night photos:** when night begins on Photos, the display moves to Clock + weather; swiping back shows photos in full colour, dimmed with the clock. *(1.0.4)*
+- **Alarm marker:** a triangle on the clock's tick ring — solid within 12 h, hollow 12–24 h. *(1.0.2–1.0.3)*
+- **Alarms fix:** Google Clock alarms that report no owner are shown; Routine/Bedtime times can be hidden ("Not my alarm"). Pull down to refresh in settings. *(1.0.1)*
+
 ## v1.0 — first stable version
 Bedside StandBy-style display for the Galaxy S26 Ultra.
 - **Trigger:** charger + sideways + still + locked → shows over the lock screen; closes when lifted or unplugged.
