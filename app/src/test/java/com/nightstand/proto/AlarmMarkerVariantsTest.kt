@@ -108,6 +108,71 @@ class AlarmMarkerVariantsTest {
         val (bx, by) = pt(cx, cy, ang(al), r * 0.94f); Glyphs.bell(c, bx, by, r * 0.085f, pal.accent)
     }
 
+    // G — bezel triangle (solid ≤12 h, hollow beyond) + readout fixed under the 12.
+    //     withTomorrow: append "tomorrow" beyond 12 h. timer: also a running timer line.
+    private fun g(c: Canvas, cx: Float, cy: Float, r: Float, al: Calendar, far: Boolean, pal: Palette,
+                  withTomorrow: Boolean, timer: Boolean) {
+        val deg = ang(al)
+        val tip = pt(cx, cy, deg, r * 1.005f); val b1 = pt(cx, cy, deg - 4.5f, r * 1.12f); val b2 = pt(cx, cy, deg + 4.5f, r * 1.12f)
+        p.color = pal.accent; p.strokeWidth = r * 0.018f; p.strokeJoin = Paint.Join.ROUND
+        p.style = if (far) Paint.Style.STROKE else Paint.Style.FILL
+        c.drawPath(Path().apply { moveTo(tip.first, tip.second); lineTo(b1.first, b1.second); lineTo(b2.first, b2.second); close() }, p)
+        p.style = Paint.Style.FILL
+        // Readout under the 12 (same look as today's in-dial readout).
+        val h = al.get(Calendar.HOUR).let { if (it == 0) 12 else it }
+        val ampm = if (al.get(Calendar.AM_PM) == Calendar.AM) "AM" else "PM"
+        val time = "%d:%02d %s".format(h, al.get(Calendar.MINUTE), ampm) + if (far && withTomorrow) " · tomorrow" else ""
+        val small = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = Fonts.bold; textSize = r * 0.095f; color = pal.secondary }
+        val big = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = Fonts.heavy; textSize = r * 0.15f; color = pal.accent }
+        var y = cy - r * 0.50f
+        if (timer) {
+            val txt = "4:59"; val glyph = big.textSize * 0.9f
+            val w = glyph * 1.25f + big.measureText(txt); val left = cx - w / 2
+            y += big.textSize
+            Glyphs.hourglass(c, left + glyph / 2, y - big.textSize * 0.36f, glyph, big.color)
+            c.drawText(txt, left + glyph * 1.25f, y, big)
+            y += small.textSize * 0.55f
+        }
+        val glyph = small.textSize * 0.9f
+        val w = glyph * 1.25f + small.measureText(time); val left = cx - w / 2
+        y += small.textSize
+        Glyphs.bell(c, left + glyph / 2, y - small.textSize * 0.36f, glyph, small.color)
+        c.drawText(time, left + glyph * 1.25f, y, small)
+    }
+
+    @Test fun renderG() {
+        val now = Calendar.getInstance().apply { set(2026, 10, 27, 22, 50, 20) }
+        val near = (now.clone() as Calendar).apply { add(Calendar.MINUTE, 7 * 60 + 10) }
+        val far = (now.clone() as Calendar).apply { add(Calendar.MINUTE, 15 * 60 + 40) }
+        val rows = listOf(
+            Triple("G1  triangle (solid ≤12 h / hollow beyond) + time under the 12", false, false),
+            Triple("G2  same, with \"tomorrow\" beyond 12 h", true, false),
+            Triple("G3  G2 with a running timer (readout grows to two lines)", true, true),
+        )
+        val cellW = 520; val cellH = 470; val pad = 16; val labelH = 46
+        val cols = listOf(Triple(near, false, "within 12 h · day"), Triple(far, false, "12–24 h · day"),
+            Triple(near, true, "within 12 h · night"), Triple(far, true, "12–24 h · night"))
+        val sheet = Bitmap.createBitmap(pad + cols.size * (cellW + pad), pad + rows.size * (cellH + labelH + pad), Bitmap.Config.ARGB_8888)
+        val sc = Canvas(sheet); sc.drawColor(0xFF2B2B30.toInt())
+        val title = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = Fonts.bold; textSize = 26f; color = 0xFFE8E8EE.toInt() }
+        val sub = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = Fonts.semibold; textSize = 20f; color = 0xFF9A9AA2.toInt() }
+        rows.forEachIndexed { row, (name, tomorrow, timer) ->
+            val y0 = pad + row * (cellH + labelH + pad)
+            sc.drawText(name, pad.toFloat(), y0 + 30f, title)
+            cols.forEachIndexed { col, (al, night, cap) ->
+                val x0 = pad + col * (cellW + pad); val yc = y0 + labelH
+                val pal = if (night) Palette.night() else Palette.DAY
+                p.color = 0xFF000000.toInt(); p.style = Paint.Style.FILL; p.alpha = 255
+                sc.drawRect(x0.toFloat(), yc.toFloat(), (x0 + cellW).toFloat(), (yc + cellH).toFloat(), p)
+                val cx = x0 + cellW / 2f; val cy = yc + cellH / 2f - 6f; val r = cellH * 0.40f
+                AnalogClock.draw(sc, cx, cy, r, now, pal, showSeconds = false) { cv -> g(cv, cx, cy, r, al, al === far, pal, tomorrow, timer) }
+                sc.drawText(cap, x0 + 10f, yc + cellH - 10f, sub)
+            }
+        }
+        File("build/previews").mkdirs()
+        File("build/previews/alarm-variants-g.png").outputStream().use { sheet.compress(Bitmap.CompressFormat.PNG, 100, it) }
+    }
+
     @Test fun render() {
         ApplicationProvider.getApplicationContext<android.content.Context>()
         val variants = listOf(
