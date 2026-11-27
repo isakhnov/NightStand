@@ -152,4 +152,11 @@ object Prefs {
         if (hide) s.add(key) else s.remove(key)
         sp(c).edit().putStringSet("hiddenAlarmTimes", s).apply()
     }
+
+    /** Learned Samsung charge limit (battery protection); 100 = none seen. */
+    fun chargeLimit(c: Context) = sp(c).getInt("chargeLimit", 100)
+    fun setChargeLimit(c: Context, v: Int) = sp(c).edit().putInt("chargeLimit", v).apply()
+
+    fun showBatteryRing(c: Context) = sp(c).getBoolean("showBatteryRing", true)
+    fun setShowBatteryRing(c: Context, v: Boolean) = sp(c).edit().putBoolean("showBatteryRing", v).apply()
 }

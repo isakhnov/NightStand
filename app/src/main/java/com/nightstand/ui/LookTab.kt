@@ -128,6 +128,17 @@ fun LookTab(s: SettingsScope) {
                     dark = Prefs.Darkness.values()[i]; Prefs.setDarkness(c, dark)
                 })
             }
+            SectionLabel("Charging")
+            SettingsCard {
+                var ring by remember { mutableStateOf(Prefs.showBatteryRing(c)) }
+                val limit = Prefs.chargeLimit(c)
+                SettingRow("Charging ring (top-left)",
+                    "Level, charge limit tick, solid when charged" +
+                        if (limit < 100) "\nCharge limit learned: $limit %" else "\nNo charge limit seen yet") {
+                    Switch(ring, { ring = it; Prefs.setShowBatteryRing(c, it) })
+                }
+            }
+
             SectionLabel("Alarms & timers")
             SettingsCard {
                 var alarm by remember { mutableStateOf(Prefs.showAlarm(c)) }
