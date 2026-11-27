@@ -18,7 +18,9 @@ import kotlin.math.abs
  * Hosts the pages and owns all touch on the Nightstand screen:
  *
  *  - swipe left/right  → next/previous page, wrapping around (cycle)
- *  - swipe up/down     → [onBrightnessDrag] (night brightness), with a label
+ *  - swipe up/down     → [onBrightnessDrag] (night brightness), with a label —
+ *    unless the page claims drags starting at that point ([Page.verticalDragTarget]:
+ *    on the Photos page a drag on the photo hides it, brightness is the clock half)
  *  - tap / double-tap  → [onTap] / [onDoubleTap]
  *
  * Hand-rolled instead of ViewPager2 to stay dependency-free and to keep the
@@ -44,7 +46,7 @@ class PageContainer(context: Context) : FrameLayout(context) {
     private val slop = ViewConfiguration.get(context).scaledTouchSlop
     private val density = resources.displayMetrics.density
     private var downX = 0f; private var downY = 0f; private var lastY = 0f
-    private var mode = 0 // 0 undecided, 1 horizontal, 2 vertical
+    private var mode = 0 // 0 undecided, 1 horizontal, 2 vertical brightness, 3 vertical to the page, 4 vertical ignored
     private var velocity: VelocityTracker? = null
     private var anim: ValueAnimator? = null
 
@@ -91,9 +93,16 @@ class PageContainer(context: Context) : FrameLayout(context) {
                 val dx = e.x - downX; val dy = e.y - downY
                 if (mode == 0) {
                     if (abs(dx) > slop && abs(dx) > abs(dy) && pages.size > 1) mode = 1
-                    else if (abs(dy) > slop && abs(dy) > abs(dx)) mode = 2
+                    else if (abs(dy) > slop && abs(dy) > abs(dx)) {
+                        mode = when (current?.verticalDragTarget(downX, downY) ?: DragTarget.BRIGHTNESS) {
+                            DragTarget.BRIGHTNESS -> 2
+                            DragTarget.PAGE -> 3
+                            DragTarget.NONE -> 4.also { current?.verticalDragHint()?.let { flash(it) } }
+                        }
+                    }
                 }
                 if (mode == 1) layoutDrag(dx)
+                if (mode == 3) current?.onVerticalDrag(dy)
                 if (mode == 2) {
                     onBrightnessDrag((lastY - e.y) / height)?.let { flash(it) }
                     lastY = e.y
@@ -110,6 +119,9 @@ class PageContainer(context: Context) : FrameLayout(context) {
                         else -> 0
                     }
                     animateTo(dx, dir)
+                } else if (mode == 3) {
+                    velocity!!.computeCurrentVelocity(1000)
+                    current?.onVerticalDragEnd(e.y - downY, velocity!!.yVelocity / density, false)
                 } else if (mode == 0) {
                     // Controls on the page (e.g. play/pause) win over tap/double-tap
                     // and fire immediately, without the double-tap delay.
@@ -119,6 +131,7 @@ class PageContainer(context: Context) : FrameLayout(context) {
             }
             MotionEvent.ACTION_CANCEL -> {
                 if (mode == 1) animateTo(e.x - downX, 0)
+                if (mode == 3) current?.onVerticalDragEnd(e.y - downY, 0f, true)
                 velocity?.recycle(); velocity = null
             }
         }

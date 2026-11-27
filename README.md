@@ -17,7 +17,7 @@ setup; analog or digital clock everywhere):
 | Clock + up next | clock | Google Calendar events, notifications strip |
 | Clock + weather | clock | iPhone-style: place + temperature on top; condition icon, text and H/L below (°F default, °C option) — Open-Meteo, approximate location |
 | Big clock | full-screen clock | — |
-| Clock + photos | clock | photos on the phone (all / favourites / one album): starts as the whole photo, zooms to fill, pans across; red monochrome and still at night |
+| Clock + photos | clock | photos on the phone (all / favourites / one album): starts as the whole photo, zooms to fill, pans across; red monochrome and still at night. Optional **Smart selection** (on-device MobileCLIP, model downloaded on demand): skips utility shots, one per burst, **swipe down on the photo** (by day) to hide it and its look-alikes ([docs](docs/photos-intelligence/step-a/tflite/README.md)) |
 | Clock + now playing | clock | album art, title, artist, progress, ⏮ ⏯ ⏭ for the active media session (Spotify preferred; works with any player) |
 
 **On every clock face:** the next clock-app alarm within 24 h (bell on the
@@ -45,10 +45,12 @@ Mockups: [`docs/settings-mockup/`](docs/settings-mockup/).
 renders every view, day and night, analog and digital, to `app/build/previews/`;
 `SettingsPreviewTest` does the same for each settings tab.
 
-> Status: **v1.0** — in nightly use on a Galaxy S26 Ultra (One UI 9 / Android 17).
-> 71 JVM tests (`./gradlew testDebugUnitTest`); release APK ~1.9 MB.
-> Changes per version: [CHANGELOG.md](CHANGELOG.md). Smart photo selection is the
-> next version (branch `photos-step-a`, plan in `docs/photos-intelligence/`).
+> Status: **v1.1** — in nightly use on a Galaxy S26 Ultra (One UI 9 / Android 17).
+> Release APK ~2.9 MB (arm64). Changes per version: [CHANGELOG.md](CHANGELOG.md).
+> **Smart photos:** turn on in Views → Photos ⚙ → Smart selection. The 13 MB image
+> model isn't in the APK: the app downloads it from the GitHub release
+> `model-mobileclip-s0-v1` (asset `mobileclip_s0_image.tflite`, SHA-256 checked) or
+> imports it via "Import model file…". How it was built: `docs/photos-intelligence/step-a/tflite/`.
 
 ---
 
@@ -220,8 +222,5 @@ The unit tests cover the logic; these are what only the phone can answer:
 | 11 | Samsung Always On Display on | Nightstand still appears over it | |
 
 ## Next steps
-- **v1.1 — smart photo selection** (step A): on-device image model, swipe down to
-  hide a photo and its look-alikes, burst de-duplication. See
-  `docs/photos-intelligence/step-a/`.
-- **Later — step B:** a classifier trained on photos you pick (`docs/photos-intelligence/step-b/`).
+- **Step B:** a classifier trained on photos you pick (`docs/photos-intelligence/step-b/`).
 - Alarms from non-clock apps (placeholder "Under development" in Look).

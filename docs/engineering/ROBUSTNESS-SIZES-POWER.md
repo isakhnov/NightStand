@@ -1,6 +1,6 @@
 # Robustness, screen sizes and steady-state power (v0.7.6)
 
-## Tests (71, all JVM — `./gradlew testDebugUnitTest`)
+## Tests (93, all JVM — `./gradlew testDebugUnitTest`)
 
 | Area | What's covered | File |
 |---|---|---|
@@ -14,6 +14,7 @@
 | Timers | chronometer, custom layout, **Android 17 MetricStyle**, paused/ringing, labels, **2 000 random notifications never throw** | AlarmsTimersTest, RobustnessPureTest |
 | Weather | real Open-Meteo shape + rounding; malformed reply throws (caught by refresh) | RobustnessAndroidTest |
 | Photos | Ken Burns fit→fill→pan; **extreme shapes (panorama, 1×1, 3×50000) stay finite** | ViewsLogicTest, RobustnessPureTest |
+| Smart photos | cosine/fp16, look-alike radius edges, burst grouping, logistic head (learns, gated at 3 swipes, anchors stop collapse), selection ranking, look-ahead queue, prompt table vs Python golden vectors, preprocessing; **Robolectric: DB insert/hide/restore/reset, swipe → look-alikes → undo/restore, junk skipped, one per burst, model loaded only for unscored photos and closed when idle/hidden/trimmed, background trickle + nightly cap, Smart off / model missing / runtime failure → random, SHA-256 gate; gestures: ↓ on the photo hides by day, nothing at night, brightness only on the clock half** (fake embedder, never the real model) | SmartPureTest, SmartAndroidTest |
 | Crash capture | handler stores the report | RobustnessAndroidTest |
 | Rendering | every view × clock style × day/night on **5 screen shapes with stress data**; every settings tab | ScreenSizesTest, PagePreviewTest, SettingsPreviewTest |
 

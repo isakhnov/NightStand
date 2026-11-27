@@ -1,6 +1,10 @@
 # Photos intelligence, Step A: lazy scoring, swipe-to-teach, one per burst
 
-Status: **strategy for discussion, nothing built in the app.** Prepared 2026-11-26.
+Status: **built in v0.8.0** (branch `photos-step-a`) with the user's decisions of 2026-11-26: LiteRT from
+Play services instead of ONNX Runtime, model downloaded on demand (not in the APK), look-alike radius as a
+setting, no swipe-to-hide at night, one swipe = junk, prompt table v2 (firearms keep; food, memes,
+drawings junk), background scoring ≤ 300/night. Model build, validation, size and SHA-256:
+[`tflite/README.md`](tflite/README.md). The rest of this document is the original strategy.
 Builds on [`../STRATEGY.md`](../STRATEGY.md) (research) and feeds
 [`../step-b/DESIGN.md`](../step-b/DESIGN.md) (the trained classifier, later).
 

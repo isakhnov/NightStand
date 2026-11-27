@@ -5,3 +5,7 @@
 # Keep line numbers so crash reports (CrashReporter) stay readable.
 -keepattributes SourceFile,LineNumberTable
 -renamesourcefileattribute SourceFile
+
+# LiteRT (TensorFlow Lite) via Play services: JNI looks these up by name.
+-keep class org.tensorflow.lite.** { *; }
+-dontwarn org.tensorflow.lite.**

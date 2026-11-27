@@ -34,7 +34,8 @@ import kotlin.math.roundToInt
  * unlocking, turns the screen on when launched, keeps it on while it's up.
  * Content is a [PageContainer] of swipeable pages (PageRegistry).
  *
- * Gestures: swipe ←/→ = next/previous view · swipe ↑/↓ = night brightness ·
+ * Gestures: swipe ←/→ = next/previous view · swipe ↑/↓ = night brightness
+ * (on the Photos page: on the clock half; ↓ on the photo hides it by day) ·
  * tap = brighten briefly (night) · double-tap = unlock and close.
  * Closes itself when the charger is pulled or the phone is picked up
  * (WatcherService → StandByState.requestHide).
@@ -164,6 +165,12 @@ class NightstandActivity : Activity(), SensorEventListener {
         main.removeCallbacksAndMessages(null)
         WatcherService.log("Nightstand closed")
         super.onDestroy()
+    }
+
+    /** Memory pressure: drop the photo model's interpreter now (it reloads only if needed). */
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        com.nightstand.photos.smart.SmartPhotos.peek()?.trimMemory()
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {

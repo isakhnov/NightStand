@@ -1,0 +1,981 @@
+{
+ "reference": {
+  "onnx": "vision_model.onnx",
+  "sha256": "c5423c459a3b8bcb6b76b32edcdf0e796fd0a8ea65ac6d41d8f690c073c32456"
+ },
+ "variants": {
+  "mobileclip_s0_image_fp32.tflite": {
+   "size_bytes": 45570840,
+   "sha256": "40bd69ecef1a6b2220debbc03ce9e962a5afdfeec8f63fb71ff5048cd76f201c",
+   "input": [
+    1,
+    256,
+    256,
+    3
+   ],
+   "layout": "NHWC",
+   "cos_min": 1.0,
+   "cos_mean": 1.0,
+   "top1_agree": "20/20",
+   "keep_junk_side_agree": "20/20",
+   "pass": true,
+   "median_ms_1thr_x86": 153.2,
+   "near_dup_cos_to_base": {
+    "shift_3pct": 0.9978,
+    "brightness_0.85": 0.9991,
+    "jpeg_q50": 0.9974,
+    "rotate_2deg": 0.9947,
+    "zoom_1.15": 0.9972,
+    "motion_blur": 0.9838,
+    "other_sunset_palette": 0.9748,
+    "different_scenes_min_mean_max": [
+     0.1245,
+     0.296,
+     0.4822
+    ]
+   },
+   "ops": {
+    "PAD": 1,
+    "CONV_2D": 1,
+    "MUL": 1,
+    "ABS": 1,
+    "ADD": 1,
+    "DIV": 1,
+    "NEG": 1,
+    "EXP": 1,
+    "SUB": 1,
+    "DEPTHWISE_CONV_2D": 1,
+    "MEAN": 1,
+    "LOGISTIC": 1,
+    "TRANSPOSE": 4,
+    "RESHAPE": 1,
+    "FULLY_CONNECTED": 5,
+    "SPLIT_V": 1,
+    "BATCH_MATMUL": 1,
+    "SOFTMAX": 1,
+    "AVERAGE_POOL_2D": 1
+   },
+   "per_image": {
+    "target": {
+     "cos": 1.0,
+     "top_ref": "shooting_target",
+     "top_tflite": "shooting_target",
+     "margin_ref": -6.58,
+     "margin_tflite": -6.58
+    },
+    "receipt": {
+     "cos": 1.0,
+     "top_ref": "receipt",
+     "top_tflite": "receipt",
+     "margin_ref": -17.25,
+     "margin_tflite": -17.25
+    },
+    "landscape": {
+     "cos": 1.0,
+     "top_ref": "mountains",
+     "top_tflite": "mountains",
+     "margin_ref": 4.54,
+     "margin_tflite": 4.54
+    },
+    "breaker_panel": {
+     "cos": 1.0,
+     "top_ref": "breaker_panel",
+     "top_tflite": "breaker_panel",
+     "margin_ref": -13.22,
+     "margin_tflite": -13.22
+    },
+    "screenshot": {
+     "cos": 1.0,
+     "top_ref": "screenshot",
+     "top_tflite": "screenshot",
+     "margin_ref": -10.85,
+     "margin_tflite": -10.85
+    },
+    "document": {
+     "cos": 1.0,
+     "top_ref": "document",
+     "top_tflite": "document",
+     "margin_ref": -8.78,
+     "margin_tflite": -8.78
+    },
+    "parking_pillar": {
+     "cos": 1.0,
+     "top_ref": "parking_spot",
+     "top_tflite": "parking_spot",
+     "margin_ref": -16.35,
+     "margin_tflite": -16.35
+    },
+    "red_car": {
+     "cos": 1.0,
+     "top_ref": "sports_car",
+     "top_tflite": "sports_car",
+     "margin_ref": 4.22,
+     "margin_tflite": 4.22
+    },
+    "group_cartoon": {
+     "cos": 1.0,
+     "top_ref": "friends_group",
+     "top_tflite": "friends_group",
+     "margin_ref": 10.99,
+     "margin_tflite": 10.99
+    },
+    "dark_frame": {
+     "cos": 1.0,
+     "top_ref": "dark_pocket",
+     "top_tflite": "dark_pocket",
+     "margin_ref": -12.23,
+     "margin_tflite": -12.23
+    },
+    "target_rot5": {
+     "cos": 1.0,
+     "top_ref": "shooting_target",
+     "top_tflite": "shooting_target",
+     "margin_ref": -8.68,
+     "margin_tflite": -8.68
+    },
+    "receipt_dark": {
+     "cos": 1.0,
+     "top_ref": "receipt",
+     "top_tflite": "receipt",
+     "margin_ref": -17.26,
+     "margin_tflite": -17.26
+    },
+    "landscape_other_palette": {
+     "cos": 1.0,
+     "top_ref": "mountains",
+     "top_tflite": "mountains",
+     "margin_ref": 4.62,
+     "margin_tflite": 4.62
+    },
+    "panel_crop": {
+     "cos": 1.0,
+     "top_ref": "breaker_panel",
+     "top_tflite": "breaker_panel",
+     "margin_ref": -10.67,
+     "margin_tflite": -10.67
+    },
+    "screenshot_jpeg30": {
+     "cos": 1.0,
+     "top_ref": "screenshot",
+     "top_tflite": "screenshot",
+     "margin_ref": -10.6,
+     "margin_tflite": -10.6
+    },
+    "document_blur": {
+     "cos": 1.0,
+     "top_ref": "document",
+     "top_tflite": "document",
+     "margin_ref": -9.38,
+     "margin_tflite": -9.38
+    },
+    "parking_flip": {
+     "cos": 1.0,
+     "top_ref": "parking_spot",
+     "top_tflite": "parking_spot",
+     "margin_ref": -12.17,
+     "margin_tflite": -12.17
+    },
+    "car_zoom": {
+     "cos": 1.0,
+     "top_ref": "sports_car",
+     "top_tflite": "sports_car",
+     "margin_ref": 4.12,
+     "margin_tflite": 4.12
+    },
+    "group_portrait_crop": {
+     "cos": 1.0,
+     "top_ref": "friends_group",
+     "top_tflite": "friends_group",
+     "margin_ref": 11.03,
+     "margin_tflite": 11.03
+    },
+    "dark_brighter": {
+     "cos": 1.0,
+     "top_ref": "dark_pocket",
+     "top_tflite": "dark_pocket",
+     "margin_ref": -12.44,
+     "margin_tflite": -12.44
+    }
+   }
+  },
+  "mobileclip_s0_image_fp16.tflite": {
+   "size_bytes": 22912448,
+   "sha256": "2805fd32ec50605e91d48417e497fddd3ca9d7b3d03816c2c1b47eea2efe7a60",
+   "input": [
+    1,
+    256,
+    256,
+    3
+   ],
+   "layout": "NHWC",
+   "cos_min": 0.99986,
+   "cos_mean": 0.99993,
+   "top1_agree": "20/20",
+   "keep_junk_side_agree": "20/20",
+   "pass": true,
+   "median_ms_1thr_x86": 160.4,
+   "near_dup_cos_to_base": {
+    "shift_3pct": 0.9979,
+    "brightness_0.85": 0.9991,
+    "jpeg_q50": 0.9974,
+    "rotate_2deg": 0.9947,
+    "zoom_1.15": 0.9972,
+    "motion_blur": 0.9839,
+    "other_sunset_palette": 0.9749,
+    "different_scenes_min_mean_max": [
+     0.1254,
+     0.2967,
+     0.4823
+    ]
+   },
+   "ops": {
+    "DEQUANTIZE": 3,
+    "PAD": 1,
+    "CONV_2D": 1,
+    "MUL": 1,
+    "ABS": 1,
+    "ADD": 1,
+    "DIV": 1,
+    "NEG": 1,
+    "EXP": 1,
+    "SUB": 1,
+    "DEPTHWISE_CONV_2D": 1,
+    "MEAN": 1,
+    "LOGISTIC": 1,
+    "TRANSPOSE": 4,
+    "RESHAPE": 1,
+    "FULLY_CONNECTED": 5,
+    "SPLIT_V": 1,
+    "BATCH_MATMUL": 1,
+    "SOFTMAX": 1,
+    "AVERAGE_POOL_2D": 1
+   },
+   "per_image": {
+    "target": {
+     "cos": 0.99993,
+     "top_ref": "shooting_target",
+     "top_tflite": "shooting_target",
+     "margin_ref": -6.58,
+     "margin_tflite": -6.63
+    },
+    "receipt": {
+     "cos": 0.9999,
+     "top_ref": "receipt",
+     "top_tflite": "receipt",
+     "margin_ref": -17.25,
+     "margin_tflite": -17.32
+    },
+    "landscape": {
+     "cos": 0.99996,
+     "top_ref": "mountains",
+     "top_tflite": "mountains",
+     "margin_ref": 4.54,
+     "margin_tflite": 4.56
+    },
+    "breaker_panel": {
+     "cos": 0.99992,
+     "top_ref": "breaker_panel",
+     "top_tflite": "breaker_panel",
+     "margin_ref": -13.22,
+     "margin_tflite": -13.16
+    },
+    "screenshot": {
+     "cos": 0.99994,
+     "top_ref": "screenshot",
+     "top_tflite": "screenshot",
+     "margin_ref": -10.85,
+     "margin_tflite": -10.79
+    },
+    "document": {
+     "cos": 0.99995,
+     "top_ref": "document",
+     "top_tflite": "document",
+     "margin_ref": -8.78,
+     "margin_tflite": -8.74
+    },
+    "parking_pillar": {
+     "cos": 0.9999,
+     "top_ref": "parking_spot",
+     "top_tflite": "parking_spot",
+     "margin_ref": -16.35,
+     "margin_tflite": -16.35
+    },
+    "red_car": {
+     "cos": 0.99997,
+     "top_ref": "sports_car",
+     "top_tflite": "sports_car",
+     "margin_ref": 4.22,
+     "margin_tflite": 4.23
+    },
+    "group_cartoon": {
+     "cos": 0.99992,
+     "top_ref": "friends_group",
+     "top_tflite": "friends_group",
+     "margin_ref": 10.99,
+     "margin_tflite": 11.02
+    },
+    "dark_frame": {
+     "cos": 0.9999,
+     "top_ref": "dark_pocket",
+     "top_tflite": "dark_pocket",
+     "margin_ref": -12.23,
+     "margin_tflite": -12.21
+    },
+    "target_rot5": {
+     "cos": 0.99992,
+     "top_ref": "shooting_target",
+     "top_tflite": "shooting_target",
+     "margin_ref": -8.68,
+     "margin_tflite": -8.72
+    },
+    "receipt_dark": {
+     "cos": 0.99991,
+     "top_ref": "receipt",
+     "top_tflite": "receipt",
+     "margin_ref": -17.26,
+     "margin_tflite": -17.33
+    },
+    "landscape_other_palette": {
+     "cos": 0.99996,
+     "top_ref": "mountains",
+     "top_tflite": "mountains",
+     "margin_ref": 4.62,
+     "margin_tflite": 4.64
+    },
+    "panel_crop": {
+     "cos": 0.99992,
+     "top_ref": "breaker_panel",
+     "top_tflite": "breaker_panel",
+     "margin_ref": -10.67,
+     "margin_tflite": -10.63
+    },
+    "screenshot_jpeg30": {
+     "cos": 0.99994,
+     "top_ref": "screenshot",
+     "top_tflite": "screenshot",
+     "margin_ref": -10.6,
+     "margin_tflite": -10.55
+    },
+    "document_blur": {
+     "cos": 0.99996,
+     "top_ref": "document",
+     "top_tflite": "document",
+     "margin_ref": -9.38,
+     "margin_tflite": -9.38
+    },
+    "parking_flip": {
+     "cos": 0.99989,
+     "top_ref": "parking_spot",
+     "top_tflite": "parking_spot",
+     "margin_ref": -12.17,
+     "margin_tflite": -12.19
+    },
+    "car_zoom": {
+     "cos": 0.99997,
+     "top_ref": "sports_car",
+     "top_tflite": "sports_car",
+     "margin_ref": 4.12,
+     "margin_tflite": 4.15
+    },
+    "group_portrait_crop": {
+     "cos": 0.99994,
+     "top_ref": "friends_group",
+     "top_tflite": "friends_group",
+     "margin_ref": 11.03,
+     "margin_tflite": 11.02
+    },
+    "dark_brighter": {
+     "cos": 0.99986,
+     "top_ref": "dark_pocket",
+     "top_tflite": "dark_pocket",
+     "margin_ref": -12.44,
+     "margin_tflite": -12.38
+    }
+   }
+  },
+  "mobileclip_s0_image_w8.tflite": {
+   "size_bytes": 13086656,
+   "sha256": "8eaa055f1250e69b1f77271f4a6cb092aaefbdc8ff8a485f773df61e8b1a39bc",
+   "input": [
+    1,
+    256,
+    256,
+    3
+   ],
+   "layout": "NHWC",
+   "cos_min": 0.98453,
+   "cos_mean": 0.99239,
+   "top1_agree": "20/20",
+   "keep_junk_side_agree": "20/20",
+   "pass": true,
+   "median_ms_1thr_x86": 154.4,
+   "near_dup_cos_to_base": {
+    "shift_3pct": 0.9972,
+    "brightness_0.85": 0.9991,
+    "jpeg_q50": 0.9977,
+    "rotate_2deg": 0.9957,
+    "zoom_1.15": 0.9964,
+    "motion_blur": 0.9855,
+    "other_sunset_palette": 0.9766,
+    "different_scenes_min_mean_max": [
+     0.1084,
+     0.2911,
+     0.5033
+    ]
+   },
+   "ops": {
+    "PAD": 1,
+    "CONV_2D": 1,
+    "MUL": 1,
+    "ABS": 1,
+    "ADD": 1,
+    "DIV": 1,
+    "NEG": 1,
+    "EXP": 1,
+    "SUB": 1,
+    "DEPTHWISE_CONV_2D": 1,
+    "MEAN": 1,
+    "LOGISTIC": 1,
+    "TRANSPOSE": 4,
+    "RESHAPE": 1,
+    "FULLY_CONNECTED": 5,
+    "SPLIT_V": 1,
+    "BATCH_MATMUL": 1,
+    "SOFTMAX": 1,
+    "AVERAGE_POOL_2D": 1,
+    "DEQUANTIZE": 1
+   },
+   "per_image": {
+    "target": {
+     "cos": 0.99359,
+     "top_ref": "shooting_target",
+     "top_tflite": "shooting_target",
+     "margin_ref": -6.58,
+     "margin_tflite": -5.95
+    },
+    "receipt": {
+     "cos": 0.98453,
+     "top_ref": "receipt",
+     "top_tflite": "receipt",
+     "margin_ref": -17.25,
+     "margin_tflite": -17.24
+    },
+    "landscape": {
+     "cos": 0.99591,
+     "top_ref": "mountains",
+     "top_tflite": "mountains",
+     "margin_ref": 4.54,
+     "margin_tflite": 4.33
+    },
+    "breaker_panel": {
+     "cos": 0.98953,
+     "top_ref": "breaker_panel",
+     "top_tflite": "breaker_panel",
+     "margin_ref": -13.22,
+     "margin_tflite": -14.72
+    },
+    "screenshot": {
+     "cos": 0.99734,
+     "top_ref": "screenshot",
+     "top_tflite": "screenshot",
+     "margin_ref": -10.85,
+     "margin_tflite": -11.37
+    },
+    "document": {
+     "cos": 0.99523,
+     "top_ref": "document",
+     "top_tflite": "document",
+     "margin_ref": -8.78,
+     "margin_tflite": -8.72
+    },
+    "parking_pillar": {
+     "cos": 0.99203,
+     "top_ref": "parking_spot",
+     "top_tflite": "parking_spot",
+     "margin_ref": -16.35,
+     "margin_tflite": -17.13
+    },
+    "red_car": {
+     "cos": 0.99493,
+     "top_ref": "sports_car",
+     "top_tflite": "sports_car",
+     "margin_ref": 4.22,
+     "margin_tflite": 3.27
+    },
+    "group_cartoon": {
+     "cos": 0.99596,
+     "top_ref": "friends_group",
+     "top_tflite": "friends_group",
+     "margin_ref": 10.99,
+     "margin_tflite": 11.09
+    },
+    "dark_frame": {
+     "cos": 0.98617,
+     "top_ref": "dark_pocket",
+     "top_tflite": "dark_pocket",
+     "margin_ref": -12.23,
+     "margin_tflite": -10.8
+    },
+    "target_rot5": {
+     "cos": 0.99459,
+     "top_ref": "shooting_target",
+     "top_tflite": "shooting_target",
+     "margin_ref": -8.68,
+     "margin_tflite": -8.01
+    },
+    "receipt_dark": {
+     "cos": 0.9859,
+     "top_ref": "receipt",
+     "top_tflite": "receipt",
+     "margin_ref": -17.26,
+     "margin_tflite": -16.55
+    },
+    "landscape_other_palette": {
+     "cos": 0.99557,
+     "top_ref": "mountains",
+     "top_tflite": "mountains",
+     "margin_ref": 4.62,
+     "margin_tflite": 4.62
+    },
+    "panel_crop": {
+     "cos": 0.98728,
+     "top_ref": "breaker_panel",
+     "top_tflite": "breaker_panel",
+     "margin_ref": -10.67,
+     "margin_tflite": -12.5
+    },
+    "screenshot_jpeg30": {
+     "cos": 0.9974,
+     "top_ref": "screenshot",
+     "top_tflite": "screenshot",
+     "margin_ref": -10.6,
+     "margin_tflite": -11.13
+    },
+    "document_blur": {
+     "cos": 0.99644,
+     "top_ref": "document",
+     "top_tflite": "document",
+     "margin_ref": -9.38,
+     "margin_tflite": -8.89
+    },
+    "parking_flip": {
+     "cos": 0.98669,
+     "top_ref": "parking_spot",
+     "top_tflite": "parking_spot",
+     "margin_ref": -12.17,
+     "margin_tflite": -12.54
+    },
+    "car_zoom": {
+     "cos": 0.99568,
+     "top_ref": "sports_car",
+     "top_tflite": "sports_car",
+     "margin_ref": 4.12,
+     "margin_tflite": 3.3
+    },
+    "group_portrait_crop": {
+     "cos": 0.99537,
+     "top_ref": "friends_group",
+     "top_tflite": "friends_group",
+     "margin_ref": 11.03,
+     "margin_tflite": 11.14
+    },
+    "dark_brighter": {
+     "cos": 0.98765,
+     "top_ref": "dark_pocket",
+     "top_tflite": "dark_pocket",
+     "margin_ref": -12.44,
+     "margin_tflite": -12.01
+    }
+   }
+  },
+  "mobileclip_s0_image_w8all.tflite": {
+   "size_bytes": 12074848,
+   "sha256": "9df9281a7b0e33d3f3e8ee0172f6c4309dce9051c76a1de3ef27d031be3620ed",
+   "input": [
+    1,
+    256,
+    256,
+    3
+   ],
+   "layout": "NHWC",
+   "cos_min": 0.90695,
+   "cos_mean": 0.95032,
+   "top1_agree": "20/20",
+   "keep_junk_side_agree": "20/20",
+   "pass": false,
+   "median_ms_1thr_x86": 157.6,
+   "near_dup_cos_to_base": {
+    "shift_3pct": 0.996,
+    "brightness_0.85": 0.999,
+    "jpeg_q50": 0.9982,
+    "rotate_2deg": 0.9983,
+    "zoom_1.15": 0.993,
+    "motion_blur": 0.9926,
+    "other_sunset_palette": 0.9775,
+    "different_scenes_min_mean_max": [
+     0.1321,
+     0.311,
+     0.527
+    ]
+   },
+   "ops": {
+    "PAD": 1,
+    "CONV_2D": 1,
+    "MUL": 1,
+    "ABS": 1,
+    "ADD": 1,
+    "DIV": 1,
+    "NEG": 1,
+    "EXP": 1,
+    "SUB": 1,
+    "DEPTHWISE_CONV_2D": 1,
+    "MEAN": 1,
+    "LOGISTIC": 1,
+    "TRANSPOSE": 4,
+    "RESHAPE": 1,
+    "FULLY_CONNECTED": 5,
+    "SPLIT_V": 1,
+    "BATCH_MATMUL": 1,
+    "SOFTMAX": 1,
+    "AVERAGE_POOL_2D": 1,
+    "DEQUANTIZE": 1
+   },
+   "per_image": {
+    "target": {
+     "cos": 0.96777,
+     "top_ref": "shooting_target",
+     "top_tflite": "shooting_target",
+     "margin_ref": -6.58,
+     "margin_tflite": -7.43
+    },
+    "receipt": {
+     "cos": 0.90695,
+     "top_ref": "receipt",
+     "top_tflite": "receipt",
+     "margin_ref": -17.25,
+     "margin_tflite": -18.13
+    },
+    "landscape": {
+     "cos": 0.9762,
+     "top_ref": "mountains",
+     "top_tflite": "mountains",
+     "margin_ref": 4.54,
+     "margin_tflite": 4.76
+    },
+    "breaker_panel": {
+     "cos": 0.93013,
+     "top_ref": "breaker_panel",
+     "top_tflite": "breaker_panel",
+     "margin_ref": -13.22,
+     "margin_tflite": -14.7
+    },
+    "screenshot": {
+     "cos": 0.96246,
+     "top_ref": "screenshot",
+     "top_tflite": "screenshot",
+     "margin_ref": -10.85,
+     "margin_tflite": -11.14
+    },
+    "document": {
+     "cos": 0.96216,
+     "top_ref": "document",
+     "top_tflite": "document",
+     "margin_ref": -8.78,
+     "margin_tflite": -10.45
+    },
+    "parking_pillar": {
+     "cos": 0.95717,
+     "top_ref": "parking_spot",
+     "top_tflite": "parking_spot",
+     "margin_ref": -16.35,
+     "margin_tflite": -15.82
+    },
+    "red_car": {
+     "cos": 0.93976,
+     "top_ref": "sports_car",
+     "top_tflite": "sports_car",
+     "margin_ref": 4.22,
+     "margin_tflite": 2.35
+    },
+    "group_cartoon": {
+     "cos": 0.96185,
+     "top_ref": "friends_group",
+     "top_tflite": "friends_group",
+     "margin_ref": 10.99,
+     "margin_tflite": 9.74
+    },
+    "dark_frame": {
+     "cos": 0.93861,
+     "top_ref": "dark_pocket",
+     "top_tflite": "dark_pocket",
+     "margin_ref": -12.23,
+     "margin_tflite": -9.9
+    },
+    "target_rot5": {
+     "cos": 0.97426,
+     "top_ref": "shooting_target",
+     "top_tflite": "shooting_target",
+     "margin_ref": -8.68,
+     "margin_tflite": -9.05
+    },
+    "receipt_dark": {
+     "cos": 0.91569,
+     "top_ref": "receipt",
+     "top_tflite": "receipt",
+     "margin_ref": -17.26,
+     "margin_tflite": -16.95
+    },
+    "landscape_other_palette": {
+     "cos": 0.9719,
+     "top_ref": "mountains",
+     "top_tflite": "mountains",
+     "margin_ref": 4.62,
+     "margin_tflite": 4.83
+    },
+    "panel_crop": {
+     "cos": 0.91837,
+     "top_ref": "breaker_panel",
+     "top_tflite": "breaker_panel",
+     "margin_ref": -10.67,
+     "margin_tflite": -12.69
+    },
+    "screenshot_jpeg30": {
+     "cos": 0.96017,
+     "top_ref": "screenshot",
+     "top_tflite": "screenshot",
+     "margin_ref": -10.6,
+     "margin_tflite": -11.12
+    },
+    "document_blur": {
+     "cos": 0.96612,
+     "top_ref": "document",
+     "top_tflite": "document",
+     "margin_ref": -9.38,
+     "margin_tflite": -10.11
+    },
+    "parking_flip": {
+     "cos": 0.93556,
+     "top_ref": "parking_spot",
+     "top_tflite": "parking_spot",
+     "margin_ref": -12.17,
+     "margin_tflite": -13.69
+    },
+    "car_zoom": {
+     "cos": 0.94023,
+     "top_ref": "sports_car",
+     "top_tflite": "sports_car",
+     "margin_ref": 4.12,
+     "margin_tflite": 2.31
+    },
+    "group_portrait_crop": {
+     "cos": 0.96601,
+     "top_ref": "friends_group",
+     "top_tflite": "friends_group",
+     "margin_ref": 11.03,
+     "margin_tflite": 11.24
+    },
+    "dark_brighter": {
+     "cos": 0.95506,
+     "top_ref": "dark_pocket",
+     "top_tflite": "dark_pocket",
+     "margin_ref": -12.44,
+     "margin_tflite": -11.17
+    }
+   }
+  },
+  "mobileclip_s0_image_drq.tflite": {
+   "size_bytes": 12059168,
+   "sha256": "2d74d54155c690b17ff6885c20cb84b518bbfc1a3bbe5174901f457dd22f7a9d",
+   "input": [
+    1,
+    256,
+    256,
+    3
+   ],
+   "layout": "NHWC",
+   "cos_min": 0.84685,
+   "cos_mean": 0.91069,
+   "top1_agree": "20/20",
+   "keep_junk_side_agree": "20/20",
+   "pass": false,
+   "median_ms_1thr_x86": 82.4,
+   "near_dup_cos_to_base": {
+    "shift_3pct": 0.9799,
+    "brightness_0.85": 0.9909,
+    "jpeg_q50": 0.9905,
+    "rotate_2deg": 0.9683,
+    "zoom_1.15": 0.987,
+    "motion_blur": 0.9697,
+    "other_sunset_palette": 0.9718,
+    "different_scenes_min_mean_max": [
+     0.1713,
+     0.3409,
+     0.5495
+    ]
+   },
+   "ops": {
+    "PAD": 1,
+    "CONV_2D": 1,
+    "MUL": 1,
+    "ABS": 1,
+    "ADD": 1,
+    "DIV": 1,
+    "NEG": 1,
+    "EXP": 1,
+    "SUB": 1,
+    "DEPTHWISE_CONV_2D": 1,
+    "MEAN": 1,
+    "LOGISTIC": 1,
+    "TRANSPOSE": 4,
+    "RESHAPE": 1,
+    "FULLY_CONNECTED": 5,
+    "SPLIT_V": 1,
+    "BATCH_MATMUL": 1,
+    "SOFTMAX": 1,
+    "AVERAGE_POOL_2D": 1
+   },
+   "per_image": {
+    "target": {
+     "cos": 0.84685,
+     "top_ref": "shooting_target",
+     "top_tflite": "shooting_target",
+     "margin_ref": -6.58,
+     "margin_tflite": -7.51
+    },
+    "receipt": {
+     "cos": 0.85984,
+     "top_ref": "receipt",
+     "top_tflite": "receipt",
+     "margin_ref": -17.25,
+     "margin_tflite": -18.42
+    },
+    "landscape": {
+     "cos": 0.95071,
+     "top_ref": "mountains",
+     "top_tflite": "mountains",
+     "margin_ref": 4.54,
+     "margin_tflite": 3.64
+    },
+    "breaker_panel": {
+     "cos": 0.936,
+     "top_ref": "breaker_panel",
+     "top_tflite": "breaker_panel",
+     "margin_ref": -13.22,
+     "margin_tflite": -12.6
+    },
+    "screenshot": {
+     "cos": 0.8778,
+     "top_ref": "screenshot",
+     "top_tflite": "screenshot",
+     "margin_ref": -10.85,
+     "margin_tflite": -9.81
+    },
+    "document": {
+     "cos": 0.89233,
+     "top_ref": "document",
+     "top_tflite": "document",
+     "margin_ref": -8.78,
+     "margin_tflite": -10.35
+    },
+    "parking_pillar": {
+     "cos": 0.92035,
+     "top_ref": "parking_spot",
+     "top_tflite": "parking_spot",
+     "margin_ref": -16.35,
+     "margin_tflite": -12.63
+    },
+    "red_car": {
+     "cos": 0.93567,
+     "top_ref": "sports_car",
+     "top_tflite": "sports_car",
+     "margin_ref": 4.22,
+     "margin_tflite": 2.27
+    },
+    "group_cartoon": {
+     "cos": 0.94576,
+     "top_ref": "friends_group",
+     "top_tflite": "friends_group",
+     "margin_ref": 10.99,
+     "margin_tflite": 10.33
+    },
+    "dark_frame": {
+     "cos": 0.88508,
+     "top_ref": "dark_pocket",
+     "top_tflite": "dark_pocket",
+     "margin_ref": -12.23,
+     "margin_tflite": -7.52
+    },
+    "target_rot5": {
+     "cos": 0.89829,
+     "top_ref": "shooting_target",
+     "top_tflite": "shooting_target",
+     "margin_ref": -8.68,
+     "margin_tflite": -10.1
+    },
+    "receipt_dark": {
+     "cos": 0.84727,
+     "top_ref": "receipt",
+     "top_tflite": "receipt",
+     "margin_ref": -17.26,
+     "margin_tflite": -16.13
+    },
+    "landscape_other_palette": {
+     "cos": 0.95219,
+     "top_ref": "mountains",
+     "top_tflite": "mountains",
+     "margin_ref": 4.62,
+     "margin_tflite": 3.5
+    },
+    "panel_crop": {
+     "cos": 0.89584,
+     "top_ref": "breaker_panel",
+     "top_tflite": "breaker_panel",
+     "margin_ref": -10.67,
+     "margin_tflite": -13.12
+    },
+    "screenshot_jpeg30": {
+     "cos": 0.87731,
+     "top_ref": "screenshot",
+     "top_tflite": "screenshot",
+     "margin_ref": -10.6,
+     "margin_tflite": -10.17
+    },
+    "document_blur": {
+     "cos": 0.94502,
+     "top_ref": "document",
+     "top_tflite": "document",
+     "margin_ref": -9.38,
+     "margin_tflite": -10.31
+    },
+    "parking_flip": {
+     "cos": 0.92924,
+     "top_ref": "parking_spot",
+     "top_tflite": "parking_spot",
+     "margin_ref": -12.17,
+     "margin_tflite": -11.58
+    },
+    "car_zoom": {
+     "cos": 0.93785,
+     "top_ref": "sports_car",
+     "top_tflite": "sports_car",
+     "margin_ref": 4.12,
+     "margin_tflite": 0.32
+    },
+    "group_portrait_crop": {
+     "cos": 0.94792,
+     "top_ref": "friends_group",
+     "top_tflite": "friends_group",
+     "margin_ref": 11.03,
+     "margin_tflite": 11.14
+    },
+    "dark_brighter": {
+     "cos": 0.9324,
+     "top_ref": "dark_pocket",
+     "top_tflite": "dark_pocket",
+     "margin_ref": -12.44,
+     "margin_tflite": -9.83
+    }
+   }
+  }
+ }
+}

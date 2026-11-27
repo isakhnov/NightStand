@@ -110,6 +110,8 @@ fun DebugTab(s: SettingsScope) {
                 }, fontSize = 13.sp)
             }
 
+            SmartPhotosDebug(now)
+
             SectionLabel("Test")
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton({ WatcherService.launch(c) }) { Text("Launch now") }
