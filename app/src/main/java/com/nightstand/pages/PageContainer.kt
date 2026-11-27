@@ -205,7 +205,10 @@ class PageContainer(context: Context) : FrameLayout(context) {
 
     override fun dispatchDraw(canvas: Canvas) {
         super.dispatchDraw(canvas)
-        battery?.takeIf { com.nightstand.Prefs.showBatteryRing(context) }?.let { b ->
+        battery?.takeIf {
+            com.nightstand.Prefs.showBatteryRing(context) &&
+                com.nightstand.BatteryRing.visible(it, com.nightstand.Prefs.hideRingAbove95(context))
+        }?.let { b ->
             // Top-left corner, outside the analog clock's circle; drifts with burn-in shift.
             val (sx, sy) = com.nightstand.BurnIn.shiftFor(java.util.Calendar.getInstance().get(java.util.Calendar.MINUTE), 8 * density)
             val rr = 11 * density

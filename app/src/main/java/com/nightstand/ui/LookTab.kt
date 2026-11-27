@@ -137,6 +137,10 @@ fun LookTab(s: SettingsScope) {
                         if (limit < 100) "\nCharge limit learned: $limit %" else "\nNo charge limit seen yet") {
                     Switch(ring, { ring = it; Prefs.setShowBatteryRing(c, it) })
                 }
+                var hide95 by remember { mutableStateOf(Prefs.hideRingAbove95(c)) }
+                SettingRow("Hide when charged above 95 %", "Show the ring only while it's still charging up") {
+                    Switch(hide95, { hide95 = it; Prefs.setHideRingAbove95(c, it) }, enabled = ring)
+                }
             }
 
             SectionLabel("Alarms & timers")

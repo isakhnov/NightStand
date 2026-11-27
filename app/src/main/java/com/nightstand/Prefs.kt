@@ -137,4 +137,7 @@ object Prefs {
 
     fun showBatteryRing(c: Context) = sp(c).getBoolean("showBatteryRing", true)
     fun setShowBatteryRing(c: Context, v: Boolean) = sp(c).edit().putBoolean("showBatteryRing", v).apply()
+
+    fun hideRingAbove95(c: Context) = sp(c).getBoolean("hideRingAbove95", false)
+    fun setHideRingAbove95(c: Context, v: Boolean) = sp(c).edit().putBoolean("hideRingAbove95", v).apply()
 }
