@@ -199,8 +199,18 @@ class PageContainer(context: Context) : FrameLayout(context) {
         postDelayed({ invalidate() }, ms + 20)
     }
 
+    /** Corner charging ring; null hides it. */
+    var battery: com.nightstand.BatteryState? = null
+        set(v) { field = v; invalidate() }
+
     override fun dispatchDraw(canvas: Canvas) {
         super.dispatchDraw(canvas)
+        battery?.takeIf { com.nightstand.Prefs.showBatteryRing(context) }?.let { b ->
+            // Top-left corner, outside the analog clock's circle; drifts with burn-in shift.
+            val (sx, sy) = com.nightstand.BurnIn.shiftFor(java.util.Calendar.getInstance().get(java.util.Calendar.MINUTE), 8 * density)
+            val rr = 11 * density
+            com.nightstand.BatteryRing.draw(canvas, 26 * density + sx, 26 * density + sy, rr, b, palette)
+        }
         if (System.currentTimeMillis() > overlayUntil) return
         overlayPaint.color = palette.primary
         overlayText?.let {

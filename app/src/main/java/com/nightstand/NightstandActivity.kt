@@ -202,7 +202,12 @@ class NightstandActivity : Activity(), SensorEventListener {
         val level = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
         val scale = i.getIntExtra(BatteryManager.EXTRA_SCALE, 100)
         data.batteryPct = if (level >= 0) level * 100 / scale else -1
-        data.charging = i.getIntExtra(BatteryManager.EXTRA_STATUS, 0) == BatteryManager.BATTERY_STATUS_CHARGING
+        val status = i.getIntExtra(BatteryManager.EXTRA_STATUS, 0)
+        data.charging = status == BatteryManager.BATTERY_STATUS_CHARGING
+        val plugged = i.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0) != 0
+        val limit = BatteryRing.learnLimit(Prefs.chargeLimit(this), data.batteryPct, plugged, status)
+        if (limit != Prefs.chargeLimit(this)) { Prefs.setChargeLimit(this, limit); WatcherService.log("charge limit learned: $limit%") }
+        container.battery = if (data.batteryPct >= 0) BatteryState(data.batteryPct, plugged, data.charging, limit) else null
         container.refreshAll()
     }
 

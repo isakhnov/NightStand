@@ -16,8 +16,8 @@ android {
         // foreground service started from BOOT_COMPLETED, full-screen intent,
         // overlay-permission background launch — is allowed at 35.
         targetSdk = 35
-        versionCode = 23
-        versionName = "1.0.4"
+        versionCode = 25
+        versionName = "1.0.5"
     }
 
     // One key for every build, so each APK installs over the last one.
