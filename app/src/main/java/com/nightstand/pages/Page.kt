@@ -93,7 +93,6 @@ object PageRegistry {
     val all = listOf(
         Entry(ClockAgendaPage.ID, "Clock + up next") { c, d -> ClockAgendaPage(c, d) },
         Entry(WeatherPage.ID, "Clock + weather") { c, d -> WeatherPage(c, d) },
-        Entry(BigClockPage.ID, "Big clock") { c, d -> BigClockPage(c, d) },
         Entry(PhotosPage.ID, "Clock + photos") { c, d -> PhotosPage(c, d) },
         Entry(NowPlayingPage.ID, "Clock + now playing") { c, d -> NowPlayingPage(c, d) },
     )

@@ -73,7 +73,7 @@ class BatteryRingTest {
         val shots = mutableListOf<Bitmap>()
         for ((style, night) in listOf(Prefs.ClockStyle.ANALOG to false, Prefs.ClockStyle.DIGITAL to true)) {
             Prefs.setClockStyle(c, style)
-            for (id in listOf(com.nightstand.pages.WeatherPage.ID, com.nightstand.pages.BigClockPage.ID, com.nightstand.pages.ClockAgendaPage.ID)) {
+            for (id in listOf(com.nightstand.pages.WeatherPage.ID, com.nightstand.pages.PhotosPage.ID, com.nightstand.pages.ClockAgendaPage.ID)) {
                 val box = com.nightstand.pages.PageContainer(c)
                 val data = com.nightstand.pages.DisplayData()
                 box.setPages(listOf(com.nightstand.pages.PageRegistry.all.first { it.id == id }.create(c, data)), null)

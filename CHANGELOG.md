@@ -1,5 +1,19 @@
 # Changelog
 
+## v1.2 — leaner, with backups and updates
+**Added**
+- **About & credits** (Setup): Open-Meteo attribution (CC BY 4.0), Apple's MobileCLIP licence, LiteRT/AndroidX/Kotlin.
+- **Back up learning** (Views → Photos ⚙): export/import swipes, hidden/restored photos and learned taste to a file; matches photos by capture time on a new phone.
+- **Update available** card on Home: checks GitHub releases (vX.Y with an APK) once a day.
+- **Automatic builds** (GitHub Actions): every push builds and tests; publishing a vX.Y release attaches the signed APK.
+- **Motion to wake** (Look → Night mode, on by default): a bump of the nightstand brightens the night display for a few seconds.
+
+**Removed**
+- Big clock view (Weather, Up next, Now playing and Photos remain).
+- Learned "expected" alarms and the alarm memory from Google's notifications; alarms come from Android plus the recheck after hidden Routine times.
+- Timer readers other than Android 17's (Google Clock); the "Alarms from other apps" placeholder.
+- Prototype drawing files and research for dropped ideas (Outlook/Teams, old settings mockups).
+
 ## v1.1 — smart photos
 - **Smart selection** (Views → Photos ⚙): an on-device image model (MobileCLIP-S0, run by LiteRT from Google Play services) scores each photo once, just before it would show; scores persist, so known photos never load the model. The model is downloaded on first use (or imported), not bundled — APK 2.9 MB.
 - **Swipe down on a photo** (by day) hides it and its look-alikes ("junk, never again"), with Undo; strictness Strict / Normal / Wide. No swipe-to-hide at night; brightness drags on the clock half of the Photos view.

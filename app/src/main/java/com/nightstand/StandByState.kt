@@ -34,6 +34,10 @@ object StandByState {
     fun notifyChanged() = main.post { changeListeners.toList().forEach { it() } }
 
     /** Next alarm may have changed (recheck fired, clock notification seen). */
+    /** Motion to wake: the nightstand was bumped (from the watcher's accelerometer). */
+    val nudgeListeners = mutableSetOf<() -> Unit>()
+    fun notifyNudge() = main.post { nudgeListeners.toList().forEach { it() } }
+
     val alarmListeners = mutableSetOf<() -> Unit>()
     fun notifyAlarmChanged() = main.post { alarmListeners.toList().forEach { it() } }
 

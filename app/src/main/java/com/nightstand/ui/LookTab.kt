@@ -123,6 +123,10 @@ fun LookTab(s: SettingsScope) {
                     "Now: ${if (l < 10) "%.1f".format(l) else l.roundToInt().toString()} lux · " +
                         if (l < dark.enterLux) "red" else if (l > dark.exitLux) "day" else "in between"
                 } ?: "No light sensor: red from 22:00 to 07:00"
+                var motion by remember { mutableStateOf(Prefs.motionToWake(c)) }
+                SettingRow("Motion to wake", "At night, a bump of the nightstand brightens the display for a few seconds") {
+                    Switch(motion, { motion = it; Prefs.setMotionToWake(c, it) })
+                }
                 SettingRow("Turns red when the room is", now, Modifier.padding(top = 6.dp))
                 Segmented(Prefs.Darkness.values().map { it.label }, dark.ordinal, { i ->
                     dark = Prefs.Darkness.values()[i]; Prefs.setDarkness(c, dark)
@@ -194,16 +198,6 @@ fun LookTab(s: SettingsScope) {
                 }
                 SettingRow("Big countdown, last minute · night", null) {
                     Switch(bigNight, { bigNight = it; Prefs.setBigCountdownNight(c, it) }, enabled = timers)
-                }
-                var remember by remember { mutableStateOf(Prefs.rememberAlarms(c)) }
-                SettingRow("Remember my alarms", "When a Routine or Bedtime hides your alarm, show it dimmed as \"~7:30 AM · expected\"") {
-                    Switch(remember, { remember = it; Prefs.setRememberAlarms(c, it); version++ }, enabled = alarm)
-                }
-                // UNDER DEVELOPMENT placeholder: visible, disabled, not wired (see Alarms.next()).
-                SettingRow("Alarms from other apps", "Calendar, Routines, Tasker…") {
-                    Text("Under development", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Muted,
-                        modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(Surface2).padding(horizontal = 8.dp, vertical = 3.dp))
-                    Switch(false, {}, enabled = false)
                 }
             }
             Spacer(Modifier.height(20.dp))

@@ -16,17 +16,15 @@ setup; analog or digital clock everywhere):
 |---|---|---|
 | Clock + up next | clock | Google Calendar events, notifications strip |
 | Clock + weather | clock | iPhone-style: place + temperature on top; condition icon, text and H/L below (°F default, °C option) — Open-Meteo, approximate location |
-| Big clock | full-screen clock | — |
 | Clock + photos | clock | photos on the phone (all / favourites / one album): starts as the whole photo, zooms to fill, pans across; red monochrome and still at night. Optional **Smart selection** (on-device MobileCLIP, model downloaded on demand): skips utility shots, one per burst, **swipe down on the photo** (by day) to hide it and its look-alikes ([docs](docs/photos-intelligence/step-a/tflite/README.md)) |
 | Clock + now playing | clock | album art, title, artist, progress, ⏮ ⏯ ⏭ for the active media session (Spotify preferred; works with any player) |
 
-**On every clock face:** the next clock-app alarm within 24 h (bell on the
-ring / "🔔 7:30 AM · in 9 h"), running timers (arc on the ring / countdown
-chips; Android 17 Google Clock timers supported), and a big countdown in a
-timer's last minute (day on, night off). Samsung Routines/Bedtime entries that
-hold Android's single next-alarm slot are filtered out; the real alarm comes
-from a recheck after they pass, Google Clock's own "Upcoming alarm"
-notification, or — dimmed as "expected" — what was learned on earlier nights.
+**On every clock face:** the next clock-app alarm within 24 h (triangle on the
+ring — solid within 12 h, hollow beyond — plus "🔔 7:30 AM"), running timers
+(arc on the ring / countdown chips; Android 17 Google Clock timers), and a big
+countdown in a timer's last minute (day on, night off). Alarms come from what
+Android reports; times you mark "Not my alarm" (Samsung Routines/Bedtime) are
+hidden, and a recheck runs right after they pass.
 
 Calendar is Google accounts only (Outlook/work deliberately excluded). Weather
 data: [Open-Meteo](https://open-meteo.com/) (CC BY 4.0). Research and mockups
@@ -39,18 +37,23 @@ view's own options: Google calendars, °F/°C, photo source/album) · **Look**
 brightness, how dark the room must be) · **Setup** (permissions, "Show Debug
 tab") · **Debug** (hidden by default: live sensors, test launch, force night,
 log with Share). Built with Jetpack Compose; the display itself stays Canvas.
-Mockups: [`docs/settings-mockup/`](docs/settings-mockup/).
+Screenshots: [`docs/settings-app/`](docs/settings-app/).
 
 **Previews without a device:** `./gradlew testDebugUnitTest --tests com.nightstand.PagePreviewTest`
 renders every view, day and night, analog and digital, to `app/build/previews/`;
 `SettingsPreviewTest` does the same for each settings tab.
 
-> Status: **v1.1** — in nightly use on a Galaxy S26 Ultra (One UI 9 / Android 17).
+> Status: **v1.2** — in nightly use on a Galaxy S26 Ultra (One UI 9 / Android 17).
 > Release APK ~2.9 MB (arm64). Changes per version: [CHANGELOG.md](CHANGELOG.md).
 > **Smart photos:** turn on in Views → Photos ⚙ → Smart selection. The 13 MB image
 > model isn't in the APK: the app downloads it from the GitHub release
 > `model-mobileclip-s0-v1` (asset `mobileclip_s0_image.tflite`, SHA-256 checked) or
 > imports it via "Import model file…". How it was built: `docs/photos-intelligence/step-a/tflite/`.
+>
+> **Releases:** GitHub Actions (`.github/workflows/build.yml`) builds and tests every
+> push. Publishing a release tagged `vX.Y` attaches the signed APK (needs the
+> `NIGHTSTAND_KEYSTORE_B64` secret — see the workflow header); the app's Home tab then
+> offers it as "Update available".
 
 ---
 

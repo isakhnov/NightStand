@@ -108,16 +108,7 @@ object Prefs {
     fun bigCountdownNight(c: Context) = sp(c).getBoolean("bigCountdownNight", false)
     fun setBigCountdownNight(c: Context, v: Boolean) = sp(c).edit().putBoolean("bigCountdownNight", v).apply()
 
-    /**
-     * UNDER DEVELOPMENT — placeholder only. Would allow the "next alarm" to
-     * come from non-clock apps (Calendar, Routines, Tasker). Shown disabled in
-     * Look; Alarms.next() ignores it and always uses clock apps only.
-     */
-    fun alarmsFromOtherApps(c: Context) = sp(c).getBoolean("alarmsFromOtherApps", false)
 
-    /** Show learned clock alarms as "expected" while a Routines/Bedtime entry hides them. */
-    fun rememberAlarms(c: Context) = sp(c).getBoolean("rememberAlarms", true)
-    fun setRememberAlarms(c: Context, v: Boolean) = sp(c).edit().putBoolean("rememberAlarms", v).apply()
 
     /** Power: at night the face redraws once a minute unless this is on. */
     fun secondHandAtNight(c: Context) = sp(c).getBoolean("secondHandAtNight", false)
@@ -162,4 +153,8 @@ object Prefs {
 
     fun hideRingAbove95(c: Context) = sp(c).getBoolean("hideRingAbove95", false)
     fun setHideRingAbove95(c: Context, v: Boolean) = sp(c).edit().putBoolean("hideRingAbove95", v).apply()
+
+    /** Night: a bump of the nightstand brightens the display briefly (like a tap). */
+    fun motionToWake(c: Context) = sp(c).getBoolean("motionToWake", true)
+    fun setMotionToWake(c: Context, v: Boolean) = sp(c).edit().putBoolean("motionToWake", v).apply()
 }

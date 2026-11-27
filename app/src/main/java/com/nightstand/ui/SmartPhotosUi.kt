@@ -155,6 +155,31 @@ fun SmartPhotoOptions(openHidden: () -> Unit, changed: () -> Unit) {
         Icon(Icons.Filled.KeyboardArrowRight, null, tint = Muted)
     }
     HorizontalDivider(color = Surface3)
+    // Backup: swipes/hidden/restored + learned preferences (not embeddings) to a file you choose.
+    var backupMsg by remember { mutableStateOf<String?>(null) }
+    val exporter = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri: Uri? ->
+        if (uri != null) engine.exportLearning { json ->
+            backupMsg = if (json == null) "Export failed" else runCatching {
+                c.contentResolver.openOutputStream(uri)!!.use { it.write(json.toByteArray()) }; "Exported"
+            }.getOrElse { "Export failed: ${it.message}" }
+        }
+    }
+    val restorer = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+        if (uri != null) {
+            val text = runCatching { c.contentResolver.openInputStream(uri)!!.bufferedReader().readText() }.getOrNull()
+            if (text == null) backupMsg = "Couldn't read that file"
+            else engine.importLearning(text) { r ->
+                backupMsg = r.fold({ "Imported: ${it.matched} photos matched" + if (it.skipped > 0) ", ${it.skipped} not on this phone" else "" },
+                    { "Import failed: ${it.message}" })
+                version++; changed()
+            }
+        }
+    }
+    SettingRow("Back up learning", backupMsg ?: "Swipes, hidden and restored photos, learned taste — to a file you choose") {
+        TextButton({ exporter.launch("nightstand-photo-learning.json") }) { Text("Export") }
+        TextButton({ restorer.launch(arrayOf("application/json", "text/plain", "*/*")) }) { Text("Import") }
+    }
+    HorizontalDivider(color = Surface3)
     var confirm by remember { mutableStateOf(false) }
     Column(Modifier.fillMaxWidth().clickable { confirm = true }.padding(vertical = 10.dp)) {
         Text("Reset learning", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = Danger)
@@ -169,7 +194,8 @@ fun SmartPhotoOptions(openHidden: () -> Unit, changed: () -> Unit) {
     )
     Spacer(Modifier.height(8.dp))
     Text("On the stand, swipe down on a photo to hide it and similar ones (by day; not at night). " +
-        "Everything is worked out on this phone; nothing is uploaded. At night photos turn red, stop moving and change every 10 minutes.",
+        "Everything is worked out on this phone; nothing is uploaded. When night begins on Photos, the display " +
+        "moves to Clock + weather; swipe back for photos in colour, dimmed with the clock.",
         fontSize = 13.sp, color = Muted)
 }
 

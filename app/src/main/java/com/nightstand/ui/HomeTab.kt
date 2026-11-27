@@ -79,6 +79,25 @@ fun HomeTab(s: SettingsScope) {
                     }
                 }
             }
+            // New version on GitHub (checked at most once a day)
+            val update by androidx.compose.runtime.produceState<com.nightstand.UpdateCheck.Update?>(null, s.tick) {
+                value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    runCatching { com.nightstand.UpdateCheck.check(c, version ?: "") }.getOrNull()
+                }
+            }
+            update?.let { u ->
+                SettingsCard(color = AccentBg) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text("Update available: v${u.version}", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Accent)
+                            Text("You have v$version. Download, then open it with Files to install.", fontSize = 13.sp, color = Muted)
+                        }
+                        Button({
+                            runCatching { c.startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(u.apkUrl)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+                        }) { Text("Download", fontWeight = FontWeight.Bold) }
+                    }
+                }
+            }
             // Status
             SettingsCard(color = if (missing == 0) OkBg else WarnBg) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {

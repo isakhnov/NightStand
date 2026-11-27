@@ -166,8 +166,11 @@ class WatcherService : Service(), SensorEventListener {
         policy.onLandscape(false)
     }
 
+    private val nudge = NudgeDetector()
+
     override fun onSensorChanged(e: SensorEvent) {
         val now = e.timestamp / 1_000_000
+        if (nudge.feed(e.values[0], e.values[1], e.values[2], now)) StandByState.notifyNudge()
         val p = posture.feed(e.values[0], e.values[1], e.values[2], now)
         StandByState.lastPosture = p
         val isLand = p == PostureDetector.Posture.LANDSCAPE

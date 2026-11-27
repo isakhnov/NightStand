@@ -50,7 +50,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nightstand.CalendarSource
 import com.nightstand.Prefs
-import com.nightstand.pages.BigClockPage
 import com.nightstand.pages.ClockAgendaPage
 import com.nightstand.pages.NowPlayingPage
 import com.nightstand.pages.PageRegistry
@@ -121,7 +120,7 @@ fun ViewsTab(s: SettingsScope) {
     }
 }
 
-private fun hasOptions(id: String) = id != BigClockPage.ID
+private fun hasOptions(id: String) = true
 
 private fun subtitle(c: android.content.Context, id: String): String = when (id) {
     ClockAgendaPage.ID -> {
@@ -130,7 +129,6 @@ private fun subtitle(c: android.content.Context, id: String): String = when (id)
         if (cals.isEmpty()) "Google Calendar" else "Google Calendar · $on of ${cals.size} calendars"
     }
     WeatherPage.ID -> (if (Prefs.fahrenheit(c)) "°F" else "°C") + " · current location"
-    BigClockPage.ID -> "Clock only"
     PhotosPage.ID -> when (Prefs.photoSource(c)) {
         Prefs.PhotoSource.ALL -> "All photos"
         Prefs.PhotoSource.FAVORITES -> "Favorites"

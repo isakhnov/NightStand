@@ -9,7 +9,6 @@ import android.hardware.SensorManager
 import android.os.Looper
 import android.view.MotionEvent
 import androidx.test.core.app.ApplicationProvider
-import com.nightstand.clock.AlarmMemory
 import com.nightstand.clock.NextAlarm
 import com.nightstand.pages.DisplayData
 import com.nightstand.pages.PageContainer
@@ -184,13 +183,4 @@ class RobustnessAndroidTest {
         assertNotNull(r); assertTrue(r!!.contains("boom"))
     }
 
-    // --- alarm memory ---
-    @Test fun alarmMemory_expiresAndForgets() {
-        val now = System.currentTimeMillis()
-        AlarmMemory.remember(c, NextAlarm(now + 3_600_000, "com.google.android.deskclock"))
-        assertNotNull(AlarmMemory.get(c, now))
-        assertNull(AlarmMemory.get(c, now + 3_700_000)) // passed
-        AlarmMemory.forget(c, "test")
-        assertNull(AlarmMemory.get(c, now))
-    }
 }

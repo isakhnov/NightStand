@@ -76,6 +76,8 @@ class NightstandActivity : Activity(), SensorEventListener {
 
     private val onFeedChanged: () -> Unit = { refreshNotifs() }
     private val onAlarmChanged: () -> Unit = { refreshAlarm() }
+    /** Motion to wake: a bump brightens the night display like a tap (Look → Night mode). */
+    private val onNudge: () -> Unit = { if (Prefs.motionToWake(this)) boost() }
     private val hide: () -> Unit = { if (!isFinishing) finish() }
     private val endBoost = Runnable { boosted = false; applyBrightness() }
 
@@ -131,6 +133,7 @@ class NightstandActivity : Activity(), SensorEventListener {
         }
         StandByState.changeListeners += onFeedChanged
         StandByState.alarmListeners += onAlarmChanged
+        StandByState.nudgeListeners += onNudge
         Prefs.darkness(this).let { nightCtl.enterLux = it.enterLux; nightCtl.exitLux = it.exitLux }
         // 1 sample/s, batched 2 s: night mode reacts over seconds anyway (8 s hold).
         lightSensor?.let { sensors.registerListener(this, it, 1_000_000, 2_000_000) }
@@ -146,6 +149,7 @@ class NightstandActivity : Activity(), SensorEventListener {
         contentResolver.unregisterContentObserver(calendarObserver)
         StandByState.changeListeners -= onFeedChanged
         StandByState.alarmListeners -= onAlarmChanged
+        StandByState.nudgeListeners -= onNudge
         sensors.unregisterListener(this)
         main.removeCallbacks(secondTick)
         container.current?.onHidden()

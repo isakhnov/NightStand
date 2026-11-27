@@ -102,6 +102,19 @@ class SmartPhotos internal constructor(
         ui.invoke(Runnable(cb))
     }
 
+    /** Export learning as JSON (on the worker thread); [cb] gets the text or null. */
+    fun exportLearning(cb: (String?) -> Unit) = worker.post {
+        val json = runCatching { LearningBackup.export(db, clock()) }.getOrNull()
+        ui.invoke(Runnable { cb(json) })
+    }
+
+    /** Import learning from JSON; caches are dropped so the head and look-alikes reload. */
+    fun importLearning(json: String, cb: (Result<LearningBackup.Result>) -> Unit) = worker.post {
+        val r = runCatching { LearningBackup.import(app, db, json, clock()) }
+        if (r.isSuccess) { head = null; swiped = null; look.clear() }
+        ui.invoke(Runnable { cb(r) })
+    }
+
     /** Look-alike radius changed: re-derive which photos count as look-alikes. */
     fun radiusChanged() = worker.post { safe { resuppressAll(); look.clear() } }
 

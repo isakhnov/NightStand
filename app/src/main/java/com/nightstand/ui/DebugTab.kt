@@ -61,8 +61,6 @@ fun DebugTab(s: SettingsScope) {
     // so the on-screen log never updated after the tab opened.)
     val logText = StandByState.logText()
     val alarmExplain = com.nightstand.clock.Alarms.explain(c)
-    val remembered = com.nightstand.clock.AlarmMemory.get(c)
-    val patterns = com.nightstand.clock.AlarmPatterns.load(c)
     val timerReport = com.nightstand.NotificationFeed.timerReport
     val notifAccess = com.nightstand.NotificationFeed.isGranted(c)
 
@@ -92,15 +90,6 @@ fun DebugTab(s: SettingsScope) {
             Column(Modifier.fillMaxWidth().padding(top = 8.dp).clip(RoundedCornerShape(14.dp)).background(Surface2).padding(12.dp)) {
                 Text("NEXT ALARM (ANDROID)", fontSize = 11.sp, color = Muted, fontWeight = FontWeight.Bold)
                 Text(alarmExplain, fontSize = 15.sp, fontWeight = FontWeight.Bold)
-                Text("REMEMBERED FROM NOTIFICATION", fontSize = 11.sp, color = Muted, fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(top = 8.dp))
-                Text(remembered?.let { java.util.Date(it.triggerAt).toString() + " (" + it.sourcePkg + ")" } ?: "none",
-                    fontSize = 13.sp)
-                Text("LEARNED ALARMS", fontSize = 11.sp, color = Muted, fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(top = 8.dp))
-                val days = listOf("", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
-                Text(if (patterns.isEmpty()) "none yet" else patterns.sortedBy { it.dow * 1440 + it.hour * 60 + it.minute }
-                    .joinToString("  ") { "${days[it.dow]} %d:%02d".format(it.hour, it.minute) }, fontSize = 13.sp)
                 Text("TIMERS (CLOCK NOTIFICATIONS)", fontSize = 11.sp, color = Muted, fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(top = 8.dp))
                 Text(when {

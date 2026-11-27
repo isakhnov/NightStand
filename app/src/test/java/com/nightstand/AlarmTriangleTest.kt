@@ -6,7 +6,7 @@ import android.view.View
 import androidx.test.core.app.ApplicationProvider
 import com.nightstand.clock.ClockOverlay
 import com.nightstand.clock.NextAlarm
-import com.nightstand.pages.BigClockPage
+import com.nightstand.pages.WeatherPage
 import com.nightstand.pages.DisplayData
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -33,7 +33,7 @@ class AlarmTriangleTest {
         val now = System.currentTimeMillis()
         for ((name, h) in listOf("near" to 7.3, "far" to 15.5)) for (night in listOf(false, true)) {
             val data = DisplayData().apply { nextAlarm = NextAlarm(now + (h * 3_600_000).toLong(), "com.google.android.deskclock") }
-            val page = BigClockPage(c, data)
+            val page = WeatherPage(c, data)
             page.palette = if (night) Palette.night() else Palette.DAY
             val dm = c.resources.displayMetrics
             val w = dm.widthPixels; val hh = dm.heightPixels

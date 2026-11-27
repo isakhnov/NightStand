@@ -60,7 +60,6 @@ object ClockOverlay {
     private val small = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = Fonts.bold }
 
     fun alarmTime(c: android.content.Context, a: NextAlarm): String =
-        (if (a.expected) "~" else "") +
             DateFormat.format(if (DateFormat.is24HourFormat(c)) "HH:mm" else "h:mm a", Date(a.triggerAt)).toString()
 
     /**
@@ -88,7 +87,7 @@ object ClockOverlay {
             val at = Calendar.getInstance().apply { timeInMillis = a.triggerAt }
             val deg = (at.get(Calendar.HOUR) + at.get(Calendar.MINUTE) / 60f) * 30f
             drawAlarmTriangle(c, cx, cy, r, deg, hollow = !alarmWithin12h(a.triggerAt - x.now),
-                color = if (a.expected) p.secondary else p.accent, background = p.background)
+                color = p.accent, background = p.background)
         }
 
         // Readout, opposite the hour hand.
@@ -166,13 +165,13 @@ object ClockOverlay {
         x.alarm?.let { a ->
             small.textSize = size
             y += size * 1.3f
-            val col = if (a.expected) p.secondary else p.primary
+            val col = p.primary
             Glyphs.bell(c, left + size * 0.45f, y - size * 0.36f, size, col)
             small.color = col
             val t = alarmTime(ctx, a)
             c.drawText(t, left + size * 1.3f, y, small)
             small.color = p.secondary
-            c.drawText(" · " + formatIn(a.triggerAt - x.now) + if (a.expected) " · expected" else "",
+            c.drawText(" · " + formatIn(a.triggerAt - x.now),
                 left + size * 1.3f + small.measureText(t), y, small)
             y += size * 0.4f
         }

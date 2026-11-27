@@ -36,20 +36,6 @@ class NotificationFeed : NotificationListenerService() {
     override fun onNotificationPosted(sbn: StatusBarNotification) = rebuild()
     override fun onNotificationRemoved(sbn: StatusBarNotification) = rebuild()
 
-    override fun onNotificationRemoved(sbn: StatusBarNotification, rankingMap: RankingMap?, reason: Int) {
-        // The clock app withdrawing its own alarm notification means the alarm
-        // was dismissed early or has rung; the user swiping it away means nothing.
-        if (sbn.packageName in com.nightstand.clock.ClockApps.PACKAGES &&
-            (reason == REASON_APP_CANCEL || reason == REASON_APP_CANCEL_ALL)
-        ) {
-            val f = fields(sbn)
-            val a = com.nightstand.clock.AlarmNotificationParser.parse(
-                f.pkg, f.title, f.text, System.currentTimeMillis(), android.text.format.DateFormat.is24HourFormat(this))
-            if (a != null) com.nightstand.clock.AlarmMemory.forget(this, "clock app withdrew its alarm notification")
-        }
-        rebuild()
-    }
-
     private fun rebuild() {
         val all = try { activeNotifications ?: emptyArray() } catch (_: Throwable) { emptyArray() }
         val ranking = currentRanking
@@ -60,15 +46,6 @@ class NotificationFeed : NotificationListenerService() {
         timers = clock.mapNotNull { com.nightstand.clock.TimerParser.parse(fields(it), now) }
         timerReport = if (clock.isEmpty()) emptyList()
             else clock.map { com.nightstand.clock.TimerParser.explain(fields(it), now) }
-        val is24 = android.text.format.DateFormat.is24HourFormat(this)
-        notifiedAlarm = clock.mapNotNull {
-            val f = fields(it)
-            com.nightstand.clock.AlarmNotificationParser.parse(f.pkg, f.title, f.text, now, is24)
-        }.minByOrNull { it.triggerAt }
-        notifiedAlarm?.let {
-            com.nightstand.clock.AlarmMemory.remember(this, it)
-            StandByState.notifyAlarmChanged()
-        }
         clockDump = clock.joinToString("\n\n") { dump(it) }
         snapshot = all.asSequence()
             .filter { it.packageName != packageName }
@@ -108,41 +85,6 @@ class NotificationFeed : NotificationListenerService() {
         StandByState.notifyChanged()
     }
 
-    private data class Custom(val endsAt: Long?, val countDown: Boolean, val texts: List<String>)
-
-    /**
-     * Inflate the notification's custom layout in our process and read its
-     * Chronometer. Chronometer.base is on the elapsedRealtime clock; the base
-     * was set relative to when the notification was posted, so convert via
-     * postTime. Only for clock apps; failures just mean "no custom data".
-     */
-    @Suppress("DEPRECATION")
-    private fun custom(sbn: StatusBarNotification): Custom {
-        val n = sbn.notification
-        val rv = n.contentView ?: n.bigContentView ?: return Custom(null, false, emptyList())
-        return try {
-            val root = rv.apply(this, android.widget.FrameLayout(this))
-            var end: Long? = null; var down = false
-            val texts = mutableListOf<String>()
-            fun walk(v: android.view.View) {
-                when (v) {
-                    is android.widget.Chronometer -> {
-                        val nowWall = System.currentTimeMillis()
-                        val nowElapsed = android.os.SystemClock.elapsedRealtime()
-                        end = nowWall + (v.base - nowElapsed)
-                        down = v.isCountDown
-                    }
-                    is android.widget.TextView -> v.text?.toString()?.takeIf { it.isNotBlank() }?.let { texts += it }
-                }
-                if (v is android.view.ViewGroup) for (i in 0 until v.childCount) walk(v.getChildAt(i))
-            }
-            walk(root)
-            Custom(end, down, texts.distinct())
-        } catch (t: Throwable) {
-            Custom(null, false, emptyList())
-        }
-    }
-
     private data class MetricTimer(val endsAt: Long?, val pausedMs: Long?, val label: String?)
 
     /**
@@ -173,27 +115,16 @@ class NotificationFeed : NotificationListenerService() {
     } catch (t: Throwable) { null }
 
     private fun fields(sbn: StatusBarNotification): com.nightstand.clock.TimerParser.Fields {
-        val n = sbn.notification
-        val x = n.extras
+        val template = sbn.notification.extras.getString(Notification.EXTRA_TEMPLATE)
         val mt = if (sbn.packageName in com.nightstand.clock.ClockApps.PACKAGES &&
-            x.getString(Notification.EXTRA_TEMPLATE)?.endsWith("MetricStyle") == true) metricTimer(sbn) else null
-        val cv = if (mt == null && sbn.packageName in com.nightstand.clock.ClockApps.PACKAGES &&
-            !x.getBoolean(Notification.EXTRA_SHOW_CHRONOMETER)) custom(sbn) else Custom(null, false, emptyList())
+            template?.endsWith("MetricStyle") == true) metricTimer(sbn) else null
         return com.nightstand.clock.TimerParser.Fields(
-            pkg = sbn.packageName, ongoing = sbn.isOngoing, whenMs = n.`when`,
-            showChronometer = x.getBoolean(Notification.EXTRA_SHOW_CHRONOMETER),
-            countDown = x.getBoolean(Notification.EXTRA_CHRONOMETER_COUNT_DOWN),
-            title = x.getCharSequence(Notification.EXTRA_TITLE)?.toString(),
-            text = x.getCharSequence(Notification.EXTRA_TEXT)?.toString(),
-            actions = n.actions?.mapNotNull { it.title?.toString() } ?: emptyList(),
-            category = n.category,
-            customEndsAt = cv.endsAt,
-            customCountDown = cv.countDown,
-            customTexts = cv.texts,
+            pkg = sbn.packageName,
             metricTimer = mt != null,
             metricEndsAt = mt?.endsAt,
             metricPausedMs = mt?.pausedMs,
             metricLabel = mt?.label,
+            template = template,
         )
     }
 
@@ -218,9 +149,6 @@ class NotificationFeed : NotificationListenerService() {
         @Volatile var snapshot: List<NotifSummary> = emptyList()
             private set
         @Volatile var timers: List<com.nightstand.clock.RunningTimer> = emptyList()
-            private set
-        /** Alarm time from a clock app's own "Upcoming alarm"/"Snoozed" notification. */
-        @Volatile var notifiedAlarm: com.nightstand.clock.NextAlarm? = null
             private set
         /** One line per clock-app notification: what was read from it, or why not. */
         @Volatile var timerReport: List<String> = emptyList()

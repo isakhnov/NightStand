@@ -28,15 +28,12 @@ class RobustnessPureTest {
 
     @Test fun timerParser_neverThrowsOnRandomInput() {
         val r = Random(7)
-        val words = listOf("Timer", "alarm", "4:59", "12:00 PM", "Time's up", "stopwatch", "", "1:02:03", "Resume", "午後", "99:99:99")
         repeat(2000) {
             val f = TimerParser.Fields(
                 pkg = if (r.nextBoolean()) "com.google.android.deskclock" else "x",
-                ongoing = r.nextBoolean(), whenMs = r.nextLong(), showChronometer = r.nextBoolean(),
-                countDown = r.nextBoolean(), title = words.random(r), text = words.random(r),
-                actions = List(r.nextInt(3)) { words.random(r) }, category = null,
                 metricTimer = r.nextBoolean(), metricEndsAt = if (r.nextBoolean()) r.nextLong() else null,
                 metricPausedMs = if (r.nextBoolean()) r.nextLong(0, 10_000_000) else null,
+                metricLabel = listOf(null, "", "Timer", "Pasta", "午後").random(r),
             )
             TimerParser.parse(f, 1_000_000_000L)?.let { formatCountdown(it.remainingMs(1_000_000_000L)) }
             TimerParser.explain(f, 1_000_000_000L)

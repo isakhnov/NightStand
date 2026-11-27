@@ -46,6 +46,9 @@ fun SetupTab(s: SettingsScope) {
                     Switch(debug, { debug = it; Prefs.setShowDebug(c, it); s.refresh() })
                 }
             }
+            SectionLabel("About & credits")
+            val version = remember { runCatching { c.packageManager.getPackageInfo(c.packageName, 0).versionName }.getOrNull() ?: "" }
+            CreditsCard(version ?: "")
             Spacer(Modifier.height(20.dp))
         }
     }
