@@ -165,6 +165,24 @@ class PageContainer(context: Context) : FrameLayout(context) {
         current?.let { it.onShown(); onPageChanged(it) }
     }
 
+    /**
+     * Jump straight to the page [id] (no animation). Doesn't report through
+     * [onPageChanged], so an automatic switch isn't saved as the user's
+     * "last used" view. Returns false if that page isn't in the container.
+     */
+    fun showPage(id: String): Boolean {
+        val target = pages.indexOfFirst { it.pageId == id }
+        if (target < 0 || target == index) return target == index
+        anim?.cancel()
+        current?.onHidden()
+        index = target
+        settleInstantly()
+        current?.onShown()
+        return true
+    }
+
+    val pageIds: List<String> get() = pages.map { it.pageId }
+
     private fun settleInstantly() {
         pages.forEachIndexed { i, p ->
             p.translationX = 0f

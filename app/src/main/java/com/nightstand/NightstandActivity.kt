@@ -24,6 +24,8 @@ import android.view.WindowManager
 import com.nightstand.pages.DisplayData
 import com.nightstand.pages.PageContainer
 import com.nightstand.pages.PageRegistry
+import com.nightstand.pages.PhotosPage
+import com.nightstand.pages.WeatherPage
 import java.util.Calendar
 import kotlin.math.roundToInt
 
@@ -225,7 +227,12 @@ class NightstandActivity : Activity(), SensorEventListener {
 
     private val isNight get() = StandByState.forceNight ?: nightCtl.night
 
+    /** Night state last applied; null until the first decision after launch. */
+    private var appliedNight: Boolean? = null
+
     private fun applyBrightness() {
+        if (isNight && appliedNight != true) rollOffPhotosAtNight()
+        appliedNight = isNight
         container.palette = if (isNight) Palette.night(Prefs.nightColor(this)) else Palette.DAY
         restartSecondTick() // second hand may be off at night and on by day
         val night = Prefs.nightBrightness(this)
@@ -235,6 +242,21 @@ class NightstandActivity : Activity(), SensorEventListener {
                 boosted -> minOf(1f, night + 0.3f)
                 else -> night
             }
+        }
+    }
+
+    /**
+     * When night begins (or Nightstand opens at night) on the Photos view, move
+     * to Clock + weather — or the next non-photo view if weather is off. Only on
+     * that transition: swiping back to Photos at night keeps showing photos.
+     */
+    private fun rollOffPhotosAtNight() {
+        if (container.current?.pageId != PhotosPage.ID) return
+        val target = listOf(WeatherPage.ID).plus(container.pageIds).firstOrNull { it != PhotosPage.ID && it in container.pageIds }
+            ?: return
+        if (container.showPage(target)) {
+            WatcherService.log("night: Photos → $target")
+            restartSecondTick()
         }
     }
 

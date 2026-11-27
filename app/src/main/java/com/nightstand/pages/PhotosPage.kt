@@ -20,15 +20,15 @@ import java.util.concurrent.Executors
  * the panel, zooms to fill it, then pans across the cropped part
  * ([KenBurns]); then crossfades to the next one.
  *
- * Night: no motion (less light, less change), red monochrome at reduced
- * alpha, next photo only every 10 minutes.
+ * Night: Nightstand switches to Clock + weather when night begins; if the
+ * user swipes back here, photos show normally in full colour, dimmed with the
+ * clock by the window's night brightness (red monochrome didn't work).
  */
 class PhotosPage(context: Context, data: DisplayData) : ClockSplitPage(context, data) {
     companion object {
         const val ID = "clock_photos"
         private const val ZOOM_MS = 12_000L
         private const val DAY_MS = 45_000L
-        private const val NIGHT_MS = 10 * 60_000L
         private const val FADE_MS = 1_200L
     }
     override val pageId = ID
@@ -63,7 +63,7 @@ class PhotosPage(context: Context, data: DisplayData) : ClockSplitPage(context, 
     }
 
     override fun onTick() {
-        val period = if (palette.night) NIGHT_MS else DAY_MS
+        val period = DAY_MS
         if (cur != null && SystemClock.uptimeMillis() - shownAt > period) next()
         invalidate()
     }
@@ -102,19 +102,19 @@ class PhotosPage(context: Context, data: DisplayData) : ClockSplitPage(context, 
             return
         }
         val t = SystemClock.uptimeMillis() - shownAt
-        val night = palette.night
         clip.reset(); clip.addRoundRect(r, radius, radius, Path.Direction.CW)
         c.save(); c.clipPath(clip)
-        bmpPaint.colorFilter = if (night) palette.nightImageFilter(0.8f) else null
+        // Photos stay in full colour at night (red monochrome didn't work); the
+        // window's night brightness dims them together with the clock.
+        bmpPaint.colorFilter = null
 
         val fade = (t.toFloat() / FADE_MS).coerceIn(0f, 1f)
         prev?.let { if (fade < 1f) drawPhoto(c, it, r, Long.MAX_VALUE / 4, -panDir, 255) }
-        // Night: straight to the filled, still frame.
-        drawPhoto(c, bmp, r, if (night) ZOOM_MS else t, panDir, (fade * 255).toInt())
+        drawPhoto(c, bmp, r, t, panDir, (fade * 255).toInt())
         c.restore()
         if (fade >= 1f) prev = null
 
-        val animating = active && !night && t < DAY_MS
+        val animating = active && t < DAY_MS
         if (animating) postInvalidateDelayed(66) // 15 fps: a slow pan doesn't need more (power)
     }
 
