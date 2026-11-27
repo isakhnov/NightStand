@@ -28,15 +28,15 @@ import java.util.Calendar
  * too) with an Undo toast; brightness is then dragged on the clock half. At
  * night there is no swipe-to-hide (a sleepy hand shouldn't teach it anything).
  *
- * Night: no motion (less light, less change), red monochrome at reduced
- * alpha, next photo only every 10 minutes.
+ * Night: Nightstand switches to Clock + weather when night begins; if the
+ * user swipes back here, photos show normally in full colour, dimmed with the
+ * clock by the window's night brightness (red monochrome didn't work).
  */
 class PhotosPage(context: Context, data: DisplayData) : ClockSplitPage(context, data) {
     companion object {
         const val ID = "clock_photos"
         private const val ZOOM_MS = 12_000L
         private const val DAY_MS = 45_000L
-        private const val NIGHT_MS = 10 * 60_000L
         private const val FADE_MS = 1_200L
         private const val QUICK_FADE_MS = 300L
         private const val FALL_MS = 180L
@@ -100,7 +100,7 @@ class PhotosPage(context: Context, data: DisplayData) : ClockSplitPage(context, 
 
     override fun onTick() {
         engine.night = palette.night
-        val period = if (palette.night) NIGHT_MS else DAY_MS
+        val period = DAY_MS
         if (cur != null && SystemClock.uptimeMillis() - shownAt > period) next()
         if (toast != null && SystemClock.uptimeMillis() > toast!!.until) toast = null
         invalidate()
@@ -201,10 +201,11 @@ class PhotosPage(context: Context, data: DisplayData) : ClockSplitPage(context, 
     override fun drawRight(c: Canvas, r: RectF, now: Calendar) {
         val radius = dp(22f)
         val bmp = cur
-        val night = palette.night
         val upNow = SystemClock.uptimeMillis()
         clip.reset(); clip.addRoundRect(r, radius, radius, Path.Direction.CW)
-        bmpPaint.colorFilter = if (night) palette.nightImageFilter(0.8f) else null
+        // Photos stay in full colour at night (red monochrome didn't work); the
+        // window's night brightness dims them together with the clock.
+        bmpPaint.colorFilter = null
 
         if (bmp == null && falling == null) {
             msg.color = palette.secondary; msg.textSize = dp(18f)
@@ -226,9 +227,8 @@ class PhotosPage(context: Context, data: DisplayData) : ClockSplitPage(context, 
                 c.rotate(5f * f, r.centerX(), r.centerY())
                 c.scale(s, s, r.centerX(), r.centerY())
             }
-            // Night: straight to the filled, still frame.
             val alpha = (fade * 255 * (1f - 0.3f * f.coerceAtLeast(0f))).toInt()
-            drawPhoto(c, bmp, r, if (night) ZOOM_MS else t, panDir, alpha)
+            drawPhoto(c, bmp, r, t, panDir, alpha)
             c.restore()
             if (fade >= 1f) prev = null
         }
@@ -240,7 +240,7 @@ class PhotosPage(context: Context, data: DisplayData) : ClockSplitPage(context, 
                 c.translate(0f, fallFrom + (r.height() - fallFrom) * p)
                 c.rotate(5f * (0.35f + 0.65f * p), r.centerX(), r.centerY())
                 c.scale(0.8f, 0.8f, r.centerX(), r.centerY())
-                drawPhoto(c, fb, r, if (night) ZOOM_MS else fallPan, -panDir, ((1f - p) * 200).toInt())
+                drawPhoto(c, fb, r, fallPan, -panDir, ((1f - p) * 200).toInt())
                 c.restore()
             }
         }
@@ -251,7 +251,7 @@ class PhotosPage(context: Context, data: DisplayData) : ClockSplitPage(context, 
         }
         drawToast(c, r, upNow)
 
-        val animating = active && !night && (upNow - shownAt < DAY_MS || falling != null)
+        val animating = active && (upNow - shownAt < DAY_MS || falling != null)
         if (animating) postInvalidateDelayed(if (falling != null || upNow - shownAt < fadeMs) 16 else 66) // 15 fps pan (power)
     }
 

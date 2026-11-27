@@ -147,6 +147,33 @@ class RobustnessAndroidTest {
         com.nightstand.weather.Weather.parseOpenMeteo(org.json.JSONObject("""{"current":{}}"""), true, null, 1L)
     }
 
+    // --- night rolls Photos off to Weather; swiping back keeps Photos ---
+    @Test fun night_rollsPhotosToWeather_onceAndDoesNotSaveIt() {
+        Prefs.setStartPage(c, com.nightstand.pages.PhotosPage.ID)
+        Prefs.setLastPage(c, com.nightstand.pages.PhotosPage.ID)
+        fun currentId(a: NightstandActivity): String? {
+            val f = NightstandActivity::class.java.getDeclaredField("container").apply { isAccessible = true }
+            return (f.get(a) as PageContainer).current?.pageId
+        }
+        // Day: stays on Photos
+        StandByState.forceNight = false
+        Robolectric.buildActivity(NightstandActivity::class.java).setup().also { ctl ->
+            shadowOf(Looper.getMainLooper()).idle()
+            assertEquals(com.nightstand.pages.PhotosPage.ID, currentId(ctl.get()))
+            ctl.pause().stop().destroy()
+        }
+        // Night: moves to Weather, and "last used" is not overwritten
+        StandByState.forceNight = true
+        Robolectric.buildActivity(NightstandActivity::class.java).setup().also { ctl ->
+            shadowOf(Looper.getMainLooper()).idle()
+            assertEquals(com.nightstand.pages.WeatherPage.ID, currentId(ctl.get()))
+            assertEquals(com.nightstand.pages.PhotosPage.ID, Prefs.lastPage(c))
+            ctl.pause().stop().destroy()
+        }
+        StandByState.forceNight = null
+        Prefs.setStartPage(c, null)
+    }
+
     // --- crash capture ---
     @Test fun crashReporter_savesLastCrash() {
         CrashReporter.clear(c)
