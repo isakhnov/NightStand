@@ -46,6 +46,10 @@ object BatteryRing {
         return ((p - 0.85f) / 0.15f).coerceIn(0f, 0.85f)
     }
 
+    /** "Hide when charged above 95 %" (Look → Charging). Pure; unit-tested. */
+    fun visible(s: BatteryState, hideAbove95: Boolean) = !(hideAbove95 && s.level > 95)
+
+    private val bolt = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
     private val ring = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeCap = Paint.Cap.ROUND }
     private val fill = Paint(Paint.ANTI_ALIAS_FLAG)
 
@@ -68,6 +72,21 @@ object BatteryRing {
         if (f > 0f) {
             fill.color = color; fill.alpha = (255 * f).toInt()
             c.drawCircle(cx, cy, radius + w / 2, fill)
+        }
+        // charging symbol (lightning bolt) while plugged in; dark on a mostly-filled centre
+        if (s.plugged) {
+            bolt.color = if (f >= 0.5f) palette.background else color
+            val h = radius * 1.15f; val wd = h * 0.62f
+            val x0 = cx - wd / 2; val y0 = cy - h / 2
+            c.drawPath(android.graphics.Path().apply {
+                moveTo(x0 + wd * 0.62f, y0)
+                lineTo(x0 + wd * 0.08f, y0 + h * 0.56f)
+                lineTo(x0 + wd * 0.46f, y0 + h * 0.56f)
+                lineTo(x0 + wd * 0.34f, y0 + h)
+                lineTo(x0 + wd * 0.92f, y0 + h * 0.40f)
+                lineTo(x0 + wd * 0.54f, y0 + h * 0.40f)
+                close()
+            }, bolt)
         }
         // tick at the charge limit (only when there is one below 100 %)
         if (s.limit < 100) {

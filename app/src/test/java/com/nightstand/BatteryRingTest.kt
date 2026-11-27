@@ -38,6 +38,12 @@ class BatteryRingTest {
         assertEquals(1f, BatteryRing.fillFraction(BatteryState(100, true, false, 100)), 0f)
     }
 
+    @Test fun hideAbove95() {
+        assertTrue(BatteryRing.visible(BatteryState(96, true, false, 100), hideAbove95 = false))
+        assertTrue(!BatteryRing.visible(BatteryState(96, true, false, 100), hideAbove95 = true))
+        assertTrue(BatteryRing.visible(BatteryState(95, true, true, 100), hideAbove95 = true)) // "above" 95: 95 still shows
+    }
+
     /** Review sheet: build/previews/battery-ring.png */
     @Test fun render() {
         val cases = listOf(
