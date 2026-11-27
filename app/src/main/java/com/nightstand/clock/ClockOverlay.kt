@@ -87,11 +87,8 @@ object ClockOverlay {
         x.alarm?.let { a ->
             val at = Calendar.getInstance().apply { timeInMillis = a.triggerAt }
             val deg = (at.get(Calendar.HOUR) + at.get(Calendar.MINUTE) / 60f) * 30f
-            val rad = Math.toRadians(deg.toDouble())
-            val br = r * 0.94f // on the tick ring, clear of the numerals
-            val col = if (a.expected) p.secondary else p.primary
-            drawAlarmHand(c, cx, cy, r, rad, a.triggerAt - x.now, col)
-            Glyphs.bell(c, cx + (sin(rad) * br).toFloat(), cy - (cos(rad) * br).toFloat(), r * 0.095f, col)
+            drawAlarmTriangle(c, cx, cy, r, deg, hollow = !alarmWithin12h(a.triggerAt - x.now),
+                color = if (a.expected) p.secondary else p.accent, background = p.background)
         }
 
         // Readout, opposite the hour hand.
@@ -123,31 +120,31 @@ object ClockOverlay {
         }
     }
 
-    private val dot = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val tri = Paint(Paint.ANTI_ALIAS_FLAG).apply { strokeJoin = Paint.Join.ROUND }
+
+    /** Solid triangle within 12 h (this turn of the dial), hollow for 12–24 h. */
+    fun alarmWithin12h(untilMs: Long) = untilMs <= 12 * 3_600_000L
 
     /**
-     * Dotted "alarm hand" from the hub to the bell, under the real hands, so the
-     * alarm reads at a glance. Dense dots: rings within 12 h (this turn of the
-     * dial). Sparse dots: 12–24 h away (the bell sits at the same spot, one turn
-     * later). Spacing/size come from [alarmHandDots] (unit-tested).
+     * Alarm marker ON the tick ring: base on the ring, tip pointing to the centre,
+     * stopping just outside the numerals (≈0.86 r). Not outside the ring: on the
+     * S26 the ring is only 14 dp from the screen edge (6 dp with burn-in shift),
+     * and an outside marker needs ~23 dp. Ticks under it are cleared so the
+     * hollow version reads cleanly. (docs/previews/alarm-triangle-on-ring.png)
      */
-    private fun drawAlarmHand(c: Canvas, cx: Float, cy: Float, r: Float, rad: Double, untilMs: Long, color: Int) {
-        val (gap, radius) = alarmHandDots(untilMs)
-        dot.color = color
-        dot.alpha = (android.graphics.Color.alpha(color) * 0.75f).toInt()
-        val sx = sin(rad).toFloat(); val sy = -cos(rad).toFloat()
-        var d = r * 0.13f // start clear of the hub
-        val end = r * 0.85f // stop short of the bell
-        while (d <= end) {
-            c.drawCircle(cx + sx * d, cy + sy * d, r * radius, dot)
-            d += r * gap
+    private fun drawAlarmTriangle(c: Canvas, cx: Float, cy: Float, r: Float, deg: Float, hollow: Boolean, color: Int, background: Int) {
+        fun pt(d: Float, rr: Float) = Math.toRadians(d.toDouble()).let { (cx + sin(it) * rr).toFloat() to (cy - cos(it) * rr).toFloat() }
+        val half = 5.2f
+        fun tri(h: Float, outer: Float, tip: Float) = android.graphics.Path().apply {
+            val b1 = pt(deg - h, outer); val b2 = pt(deg + h, outer); val t = pt(deg, tip)
+            moveTo(b1.first, b1.second); lineTo(b2.first, b2.second); lineTo(t.first, t.second); close()
         }
+        tri.style = Paint.Style.FILL; tri.color = background
+        c.drawPath(tri(half * 1.25f, r * 1.02f, r * 0.835f), tri) // clear ticks underneath
+        tri.color = color
+        if (hollow) { tri.style = Paint.Style.STROKE; tri.strokeWidth = r * 0.018f } else tri.style = Paint.Style.FILL
+        c.drawPath(tri(half, r, r * 0.855f), tri)
     }
-
-    /** (gap, dot radius) as fractions of the dial radius. */
-    fun alarmHandDots(untilMs: Long): Pair<Float, Float> =
-        if (untilMs <= 12 * 3_600_000L) 0.045f to 0.013f // dense: within 12 h
-        else 0.12f to 0.015f                             // sparse: 12–24 h
 
     fun timerText(tm: RunningTimer, now: Long) =
         if (tm.state == RunningTimer.State.RINGING) "Time's up" else formatCountdown(tm.remainingMs(now))
