@@ -157,6 +157,76 @@ class MessageBadgesPrototypeTest {
         File("build/previews/message-strip.png").outputStream().use { sheet.compress(Bitmap.CompressFormat.PNG, 100, it) }
     }
 
+    /** Strip drawn ON the photo: (a) translucent pill behind it, or (b) shadows only. */
+    private fun overlayStrip(c: Canvas, right: Float, top: Float, bottom: Float, d: Float, pal: Palette, pill: Boolean) {
+        val r = 18 * d; val step = 2 * r + 30 * d
+        val cx = right - 14 * d - r
+        val total = step * (apps.size - 1) + 2 * r + 26 * d
+        val cy0 = (top + bottom) / 2 - total / 2 + r
+        if (pill) {
+            p.style = Paint.Style.FILL; p.color = 0x99000000.toInt()
+            c.drawRoundRect(RectF(cx - r - 10 * d, cy0 - r - 10 * d, cx + r + 10 * d, cy0 + total - r + 6 * d), 26 * d, 26 * d, p)
+        }
+        var cy = cy0
+        val shadow = 0xCC000000.toInt()
+        for (a in apps) {
+            if (!pill) { p.setShadowLayer(8 * d, 0f, 0f, shadow); t.setShadowLayer(6 * d, 0f, 0f, shadow) }
+            if (pal.night) {
+                p.style = Paint.Style.STROKE; p.strokeWidth = 2.2f * d; p.color = pal.primary
+                c.drawCircle(cx, cy, r, p)
+                t.color = pal.primary; t.textSize = r * 1.05f
+                c.drawText(a.glyph, cx, cy + t.textSize * 0.36f, t)
+            } else icon(c, cx, cy, r, a, pal)
+            t.color = if (pal.night) pal.primary else 0xFFFFFFFF.toInt()
+            t.textSize = 19 * d
+            c.drawText(if (a.count > 99) "99+" else a.count.toString(), cx, cy + r + 22 * d, t)
+            p.clearShadowLayer(); t.clearShadowLayer()
+            cy += step
+        }
+        p.style = Paint.Style.FILL
+    }
+
+    @Test fun renderOverlay() {
+        val c = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val dm = c.resources.displayMetrics; val W = dm.widthPixels; val H = dm.heightPixels; val d = dm.density
+        Prefs.setClockStyle(c, Prefs.ClockStyle.ANALOG)
+        val frames = mutableListOf<Pair<String, Bitmap>>()
+        // A brighter, busier sample photo to test readability.
+        val photo = Bitmap.createBitmap(1600, 1200, Bitmap.Config.ARGB_8888).also { b ->
+            Canvas(b).apply {
+                drawPaint(Paint().apply { shader = android.graphics.LinearGradient(0f, 0f, 0f, 1200f, 0xFF7FB2E5.toInt(), 0xFFF6D7A7.toInt(), android.graphics.Shader.TileMode.CLAMP) })
+                drawCircle(1250f, 380f, 150f, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFFFFF4C2.toInt() })
+                drawRect(0f, 760f, 1600f, 1200f, Paint().apply { color = 0xFF3F7D3A.toInt() })
+                drawCircle(1400f, 900f, 260f, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFF2F5E2B.toInt() })
+            }
+        }
+        for ((pill, style) in listOf(true to "a · translucent pill", false to "b · shadows only")) for (night in listOf(false, true)) {
+            val box = PageContainer(c)
+            val page = PhotosPage(c, DisplayData())
+            page.showForPreview(photo, 60_000)
+            box.setPages(listOf(page), null)
+            box.palette = if (night) Palette.night() else Palette.DAY
+            box.battery = BatteryState(78, true, true, 85)
+            box.measure(View.MeasureSpec.makeMeasureSpec(W, View.MeasureSpec.EXACTLY), View.MeasureSpec.makeMeasureSpec(H, View.MeasureSpec.EXACTLY))
+            box.layout(0, 0, W, H)
+            val b = Bitmap.createBitmap(W, H, Bitmap.Config.ARGB_8888)
+            val cv = Canvas(b); box.draw(cv)
+            // Photo pane's right edge/top/bottom in the current ClockSplitPage layout (pad 14 dp).
+            overlayStrip(cv, W - 14 * d, 14 * d, H - 14 * d, d, box.palette, pill)
+            frames += "$style · ${if (night) "night" else "day"}" to b
+        }
+        val sw = W / 2; val sh = H / 2; val g = 20; val lh = 40
+        val sheet = Bitmap.createBitmap(g + 2 * (sw + g), g + 2 * (sh + lh + g), Bitmap.Config.ARGB_8888)
+        val sc = Canvas(sheet); sc.drawColor(0xFF2B2B30.toInt())
+        val title = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = Fonts.bold; textSize = 24f; color = 0xFFE8E8EE.toInt() }
+        frames.forEachIndexed { i, (name, b) ->
+            val x = g + (i % 2) * (sw + g); val y = g + (i / 2) * (sh + lh + g)
+            sc.drawText(name, x.toFloat(), y + 28f, title)
+            sc.drawBitmap(b, null, Rect(x, y + lh, x + sw, y + lh + sh), Paint(Paint.FILTER_BITMAP_FLAG))
+        }
+        File("build/previews/message-overlay-photos.png").outputStream().use { sheet.compress(Bitmap.CompressFormat.PNG, 100, it) }
+    }
+
     @Test fun render() {
         val c = ApplicationProvider.getApplicationContext<android.content.Context>()
         val dm = c.resources.displayMetrics; val W = dm.widthPixels; val H = dm.heightPixels; val d = dm.density
