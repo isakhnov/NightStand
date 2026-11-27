@@ -157,4 +157,15 @@ object Prefs {
     /** Night: a bump of the nightstand brightens the display briefly (like a tap). */
     fun motionToWake(c: Context) = sp(c).getBoolean("motionToWake", true)
     fun setMotionToWake(c: Context, v: Boolean) = sp(c).edit().putBoolean("motionToWake", v).apply()
+
+    // --- Messages (Look) ---------------------------------------------------------
+    fun messageStyle(c: Context) = com.nightstand.messages.MessageStyle(
+        on = sp(c).getBoolean("msgOn", true),
+        vertical = sp(c).getBoolean("msgVertical", true),
+        overlay = sp(c).getBoolean("msgOverlay", false),
+        fading = sp(c).getBoolean("msgFading", false),
+    )
+    fun setMessageStyle(c: Context, s: com.nightstand.messages.MessageStyle) = sp(c).edit()
+        .putBoolean("msgOn", s.on).putBoolean("msgVertical", s.vertical)
+        .putBoolean("msgOverlay", s.overlay).putBoolean("msgFading", s.fading).apply()
 }

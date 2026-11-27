@@ -47,6 +47,19 @@ class NotificationFeed : NotificationListenerService() {
         timerReport = if (clock.isEmpty()) emptyList()
             else clock.map { com.nightstand.clock.TimerParser.explain(fields(it), now) }
         clockDump = clock.joinToString("\n\n") { dump(it) }
+        val own = packageName
+        messages = com.nightstand.messages.MessageRules.summarize(all.map { sbn ->
+            val n = sbn.notification
+            val isConv = android.os.Build.VERSION.SDK_INT >= 31 && ranking != null && ranking.getRanking(sbn.key, tmp) && tmp.isConversation
+            com.nightstand.messages.MessageRules.Fields(
+                pkg = sbn.packageName, ongoing = sbn.isOngoing,
+                groupSummary = n.flags and Notification.FLAG_GROUP_SUMMARY != 0,
+                category = n.category, template = n.extras.getString(Notification.EXTRA_TEMPLATE),
+                isConversation = isConv, number = n.number,
+                styleMessages = (n.extras.getParcelableArray(Notification.EXTRA_MESSAGES)?.size) ?: 0,
+                postTime = sbn.postTime, smallIcon = n.smallIcon,
+            )
+        }, own)
         snapshot = all.asSequence()
             .filter { it.packageName != packageName }
             .filter { !it.isOngoing && it.notification.flags and Notification.FLAG_GROUP_SUMMARY == 0 }
@@ -147,6 +160,9 @@ class NotificationFeed : NotificationListenerService() {
 
     companion object {
         @Volatile var snapshot: List<NotifSummary> = emptyList()
+            private set
+        /** Messaging apps with unread notifications (icon + count; Look → Messages). */
+        @Volatile var messages: List<com.nightstand.messages.MessageApp> = emptyList()
             private set
         @Volatile var timers: List<com.nightstand.clock.RunningTimer> = emptyList()
             private set

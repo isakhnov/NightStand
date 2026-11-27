@@ -216,8 +216,79 @@ class PageContainer(context: Context) : FrameLayout(context) {
     var battery: com.nightstand.BatteryState? = null
         set(v) { field = v; invalidate() }
 
+    // --- message badges (Look → Messages) ----------------------------------------
+
+    /** Messaging apps with unread notifications; empty hides the badges (and frees the strip). */
+    var messages: List<com.nightstand.messages.MessageApp> = emptyList()
+        set(v) {
+            val changed = v.map { it.pkg to it.count } != field.map { it.pkg to it.count }
+            field = v
+            if (changed) { messagesChangedAt = System.currentTimeMillis(); scheduleFade() }
+            applyMessageLayout()
+        }
+    var messageStyle = com.nightstand.messages.MessageStyle()
+        set(v) { field = v; scheduleFade(); applyMessageLayout() }
+    private var messagesChangedAt = 0L
+    private val fadeTick = Runnable { invalidate() }
+
+    /** Strip mode: the views shrink to leave a column (right) or row (bottom) for the badges. */
+    private fun applyMessageLayout() {
+        val s = messageStyle
+        val strip = s.on && !s.overlay && messages.isNotEmpty()
+        val px = (com.nightstand.messages.MessageStrip.STRIP_DP * density).toInt()
+        val r = if (strip && s.vertical) px else 0
+        val b = if (strip && !s.vertical) px else 0
+        if (paddingRight != r || paddingBottom != b) setPadding(0, 0, r, b) // relayout → pages re-measure
+        invalidate()
+    }
+
+    /** Fading: redraw through the 5 s → 6 s fade window. */
+    private fun scheduleFade() {
+        ui.removeCallbacks(fadeTick)
+        if (!messageStyle.fading) return
+        for (t in 5_000L..6_100L step 100) ui.postDelayed(fadeTick, t)
+    }
+
+    /** Where the badges go: the strip itself, or the matching edge region over the views. */
+    private fun messageArea(): android.graphics.RectF {
+        val px = com.nightstand.messages.MessageStrip.STRIP_DP * density
+        val w = width.toFloat(); val h = height.toFloat()
+        return if (messageStyle.vertical) {
+            // Overlay sits a little in from the edge, clear of the page dots.
+            val x = if (messageStyle.overlay) w - px / 2 - 12 * density else w - px / 2
+            android.graphics.RectF(x - px / 2, 0f, x + px / 2, h - 24 * density)
+        } else {
+            val y = if (messageStyle.overlay) h - px / 2 - 28 * density else h - px / 2 - 8 * density
+            if (messageStyle.overlay) {
+                // Hug the bottom-right corner (over the right-hand view), not across the clock.
+                val span = com.nightstand.messages.MessageStrip.step(false, density) *
+                    com.nightstand.messages.MessageStrip.slots(messages.size)
+                val right = w - 20 * density
+                android.graphics.RectF(right - span, y - px / 2, right, y + px / 2)
+            } else android.graphics.RectF(0f, y - px / 2, w, y + px / 2)
+        }
+    }
+
+    private val hairline = Paint().apply { strokeWidth = 1f }
+
+    private fun drawMessages(canvas: Canvas) {
+        val s = messageStyle
+        if (!s.on || messages.isEmpty()) return
+        val (sx, sy) = com.nightstand.BurnIn.shiftFor(java.util.Calendar.getInstance().get(java.util.Calendar.MINUTE), 6 * density)
+        if (!s.overlay) { // hairline divider between the views and the strip
+            hairline.color = palette.primary; hairline.alpha = 40
+            if (s.vertical) canvas.drawLine(width - paddingRight.toFloat(), height * 0.12f, width - paddingRight.toFloat(), height * 0.88f, hairline)
+            else canvas.drawLine(width * 0.08f, height - paddingBottom.toFloat(), width * 0.92f, height - paddingBottom.toFloat(), hairline)
+        }
+        val a = com.nightstand.messages.MessageStrip.alpha(s.fading, System.currentTimeMillis(), messagesChangedAt)
+        canvas.save(); canvas.translate(sx, sy)
+        com.nightstand.messages.MessageStrip.draw(context, canvas, messageArea(), messages, s, palette, a, density)
+        canvas.restore()
+    }
+
     override fun dispatchDraw(canvas: Canvas) {
         super.dispatchDraw(canvas)
+        drawMessages(canvas)
         battery?.takeIf {
             com.nightstand.Prefs.showBatteryRing(context) &&
                 com.nightstand.BatteryRing.visible(it, com.nightstand.Prefs.hideRingAbove95(context))

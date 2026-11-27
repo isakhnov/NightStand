@@ -147,6 +147,28 @@ fun LookTab(s: SettingsScope) {
                 }
             }
 
+            SectionLabel("Messages")
+            SettingsCard {
+                var ms by remember { mutableStateOf(Prefs.messageStyle(c)) }
+                fun set(n: com.nightstand.messages.MessageStyle) { ms = n; Prefs.setMessageStyle(c, n); version++ }
+                SettingRow("Message badges", "Messaging apps with unread messages: app icon and count only, never who or what") {
+                    Switch(ms.on, { set(ms.copy(on = it)) })
+                }
+                if (ms.on) {
+                    Spacer(Modifier.height(8.dp))
+                    Segmented(listOf("Vertical · right", "Horizontal · bottom"), if (ms.vertical) 0 else 1, { set(ms.copy(vertical = it == 0)) })
+                    Spacer(Modifier.height(8.dp))
+                    Segmented(listOf("Own strip", "Overlay"), if (ms.overlay) 1 else 0, { set(ms.copy(overlay = it == 1)) })
+                    Text(if (ms.overlay) "Drawn over the view in a dark pill; the view keeps its full size"
+                        else "The view shrinks to make room, only while there are messages",
+                        fontSize = 13.sp, color = Muted, modifier = Modifier.padding(top = 4.dp))
+                    Spacer(Modifier.height(8.dp))
+                    Segmented(listOf("Steady", "Fading"), if (ms.fading) 1 else 0, { set(ms.copy(fading = it == 1)) })
+                    Text(if (ms.fading) "Full strength when something arrives, dims after 5 s" else "Always at full strength",
+                        fontSize = 13.sp, color = Muted, modifier = Modifier.padding(top = 4.dp))
+                }
+            }
+
             SectionLabel("Alarms & timers")
             SettingsCard {
                 var alarm by remember { mutableStateOf(Prefs.showAlarm(c)) }

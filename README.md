@@ -26,6 +26,15 @@ countdown in a timer's last minute (day on, night off). Alarms come from what
 Android reports; times you mark "Not my alarm" (Samsung Routines/Bedtime) are
 hidden, and a recheck runs right after they pass.
 
+**Message badges** (Look → Messages, on by default): messaging apps with unread
+messages (WhatsApp, Signal, Messages… anything Android marks as a message or
+conversation) show as **app icon + count only** — never sender or text. Options:
+**vertical** (right edge) or **horizontal** (bottom), **own strip** (the view shrinks
+while there are messages) or **overlay** (dark pill on top), **steady** or **fading**
+(dims after 5 s). At night: the app's monochrome icon in a ring, in the night colour.
+Previews: [`docs/previews/messages-day.png`](docs/previews/messages-day.png),
+[`messages-night.png`](docs/previews/messages-night.png).
+
 Calendar is Google accounts only (Outlook/work deliberately excluded). Weather
 data: [Open-Meteo](https://open-meteo.com/) (CC BY 4.0). Research and mockups
 for each view: [`docs/views/`](docs/views/).
@@ -43,7 +52,7 @@ Screenshots: [`docs/settings-app/`](docs/settings-app/).
 renders every view, day and night, analog and digital, to `app/build/previews/`;
 `SettingsPreviewTest` does the same for each settings tab.
 
-> Status: **v1.2** — in nightly use on a Galaxy S26 Ultra (One UI 9 / Android 17).
+> Status: **v1.3** — in nightly use on a Galaxy S26 Ultra (One UI 9 / Android 17).
 > Release APK ~2.9 MB (arm64). Changes per version: [CHANGELOG.md](CHANGELOG.md).
 > **Smart photos:** turn on in Views → Photos ⚙ → Smart selection. The 13 MB image
 > model isn't in the APK: the app downloads it from the GitHub release

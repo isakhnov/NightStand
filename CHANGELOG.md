@@ -1,5 +1,8 @@
 # Changelog
 
+## v1.3 — message badges
+- **Message badges** (Look → Messages): unread messaging apps as icon + count, nothing else. Vertical (right) or horizontal (bottom); own strip (views shrink, only while there are messages) or overlay (dark pill on top; horizontal hugs the bottom-right corner); steady or fading (dims to 45 % after 5 s, back to full when something new arrives). Night: monochrome app icon in a ring. Up to 5 apps, then "+N". Shown in the Look preview (sample apps when nothing is unread).
+
 ## v1.2 — leaner, with backups and updates
 **Added**
 - **About & credits** (Setup): Open-Meteo attribution (CC BY 4.0), Apple's MobileCLIP licence, LiteRT/AndroidX/Kotlin.

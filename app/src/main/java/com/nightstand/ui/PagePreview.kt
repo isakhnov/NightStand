@@ -38,6 +38,13 @@ object PagePreview {
     const val W = 915
     const val H = 412
 
+    /** Shown in the preview when nothing is unread, so the Messages options can be judged. */
+    private val SAMPLE_MESSAGES = listOf(
+        com.nightstand.messages.MessageApp("org.thoughtcrime.securesms", 3),
+        com.nightstand.messages.MessageApp("com.whatsapp", 12),
+        com.nightstand.messages.MessageApp("com.google.android.apps.messaging", 1),
+    )
+
     /**
      * Never throws: a preview that fails to draw must not take the settings
      * screen down with it (0.5 crashed on open this way). On failure the
@@ -80,13 +87,19 @@ object PagePreview {
         val page = entry.create(ctx, data)
         page.palette = if (night) Palette.night(Prefs.nightColor(c)) else Palette.DAY
         if (page is PhotosPage && photo != null) page.showForPreview(photo, 60_000)
-        page.measure(
+        // Host it like the display does, so message badges (strip/overlay) show too.
+        val host = com.nightstand.pages.PageContainer(ctx)
+        host.palette = page.palette
+        host.setPages(listOf(page), page.pageId)
+        host.messageStyle = Prefs.messageStyle(c)
+        host.messages = NotificationFeed.messages.ifEmpty { SAMPLE_MESSAGES }
+        host.measure(
             View.MeasureSpec.makeMeasureSpec(W, View.MeasureSpec.EXACTLY),
             View.MeasureSpec.makeMeasureSpec(H, View.MeasureSpec.EXACTLY),
         )
-        page.layout(0, 0, W, H)
+        host.layout(0, 0, W, H)
         val b = Bitmap.createBitmap(W, H, Bitmap.Config.ARGB_8888)
-        page.draw(Canvas(b))
+        host.draw(Canvas(b))
         return b.asImageBitmap()
     }
 }

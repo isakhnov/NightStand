@@ -203,6 +203,8 @@ class NightstandActivity : Activity(), SensorEventListener {
     private fun refreshNotifs() {
         data.notifs = NotificationFeed.snapshot
         data.timers = NotificationFeed.timers
+        container.messageStyle = Prefs.messageStyle(this)
+        container.messages = NotificationFeed.messages
         container.refreshAll()
         restartSecondTick() // a timer may have started: count down every second
     }
